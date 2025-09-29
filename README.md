@@ -5,7 +5,6 @@
 This repository is meant to provide others out there with informative guide to genome assembly and annotation. This is no means exhuastive but a starting point based on my learned experience. 
 
 ## Outline: 
-
 	* Getting Started
 		- Considering Hifi Data
 		- HiFi Data Information 
