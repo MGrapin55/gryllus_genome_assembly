@@ -1,0 +1,9 @@
+Started on Fri Aug  8 12:39:38 CDT 2025
+For the hifi_reads dataset:
+Removing reads containing adapters a minimum of 44 bp in length and 97% match.
+
+Number of ccs reads: 4601074
+Number of adapter contaminated ccs reads: 5 (0.00010867% of total)
+Number of ccs reads retained: 4601069 (99.9999% of total)
+
+Finished on Fri Aug  8 14:11:53 CDT 2025

@@ -27,8 +27,10 @@ This directory contents important files and metrics for my *Gryllus pennsylvanic
     - Masking NUMTs 
 * [Structural Annotation](#structural-annotation)
 * [Functional Annotation](#functional-annotation)
+---
 
 ## QC Control 
+
 
 ## Removing Any Remenant Adapters and Inital Filtration 
 

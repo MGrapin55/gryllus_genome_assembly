@@ -29,8 +29,13 @@ This directory contents important files and metrics for my *Gryllus firmus* geno
 * [Functional Annotation](#functional-annotation)
 
 ## QC Control 
+[Gfirm QC Report](../Gfirm/m84286_250617_022601_s1.report.pdf)  
+**Looks Good!**
+
 
 ## Removing Any Remenant Adapters and Inital Filtration 
+[Stats](Gfirm/Gfirm_hifi_reads.stats)  
+**Looks Good!**
 
 
 ## Genome Properties 
