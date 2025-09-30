@@ -5,6 +5,7 @@
 This repository is meant to provide others out there with informative guide to genome assembly and annotation. This is no means exhuastive but a starting point based on my learned experience. 
 
 ## Outline: 
+* **[Quality Control](Assembly/Quality Assessment/README.md)**
 	* Getting Started
 		- Considering Hifi Data
 		- HiFi Data Information 
@@ -19,7 +20,7 @@ This repository is meant to provide others out there with informative guide to g
 		- A note on Kmer Counters
 		- [GenomeScope2](https://github.com/tbenavi1/genomescope2.0)
 		- Script: CountKmer.sh
-* [Assembly](Assembly/README.md) 
+* **[Assembly](Assembly/README.md)** 
 	* Geneome Assembly
 		- Using Hifiasm
 		- [Hifiasm](https://github.com/chhylp123/hifiasm)
@@ -44,7 +45,7 @@ This repository is meant to provide others out there with informative guide to g
 		- Script: YAGcloser.sh
 	* Some More Quality Assessment
 		- Personal Observations
-* [Annotation](Annotation/README.md)
+* **[Annotation](Annotation/README.md)**
 	* Annotating Our Genome
 		- The Goal of Annotation
 	* Repeat Masking

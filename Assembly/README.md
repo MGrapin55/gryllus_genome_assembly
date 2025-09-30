@@ -4,7 +4,7 @@
 ## Purpose of the Repository: 
 This repository is meant to provide others out there with informative guide to genome assembly and annotation. This is no means exhuastive but a starting point based on my learned experience. 
 
-## Outline: 
+## Outline:
 * Assembly
 	* Geneome Assembly
 		- Using Hifiasm
