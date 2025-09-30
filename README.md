@@ -56,6 +56,9 @@ This repository is meant to provide others out there with informative guide to g
 			- [DeepTE](https://github.com/LiLabAtVT/DeepTE)
 			- [TERL](https://github.com/muriloHoracio/TERL)
 		- Script: RepeatMM.sh
+		* Masking NUMTs
+			- [Procedure](https://doi.org/10.1016/j.ympev.2024.108221)
+		-Script: MaskNUMTs.sh
 	* Structural Annotation 
 		- Prepapring Your RNAseq Data
 		- [Braker3](https://github.com/Gaius-Augustus/BRAKER)
