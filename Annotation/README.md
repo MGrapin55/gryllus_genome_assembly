@@ -26,3 +26,67 @@ This repository is meant to provide others out there with informative guide to g
 		
 
 ---
+
+# Annotation 
+
+## Repeat Masking 
+
+### Thoughts on Identifying and Modeling Repeative Elements in a Non-Model Organism
+
+### Repeat Modeler
+![Repeat Modeler Pipeline](RepeatModelerPipeline.png)  
+**Figure 1.** [RepeatModeler2 for automated genomic discovery of transposable element families](https://doi.org/10.1073/pnas.1921046117) 
+
+> Repeat Modeler (De Novo Repeat Finder) -> Repeat Classifer (Module of Repeat Modeler for Classifications) -> Calls Repeat Masker (Housing the Repeat Librarys) -> Generates a Classification for the conseni.fa 
+
+
+* ```Repeat Classifer```  
+Pulling repeats from Dfam to give our classification more records. This involves querying and downloading the repective records from Dfam and then formating them to a fasta format, then telling ```RepeatClassifer``` to use your new repeats library. 
+
+### Running through this example 
+1.) Obtain a copy of Repeat Modeler and Repeat Masker
+
+```
+# Check the Version to make sure its the latest release
+mamba install bioconda::repeatmodeler
+```
+
+
+2.) Download the Dfam data
+- Method 1: Go to [Dfam](https://www.dfam.org/releases/current/families/) and download what your need
+``` bash 
+wget https://www.dfam.org/releases/current/families/Dfam-curated_only-1.embl.gz
+```
+
+Then Set the PERL5LIB Environment Variable 
+
+- The most robust and clean solution is to use the PERL5LIB environment variable, which tells the Perl interpreter where to look for modules *in addition* to its default paths. This method avoids modifying the package files.
+```bash 
+ # Activate your Conda environment:
+   conda activate your\_repeatmasker\_env
+
+ # Set the PERL5LIB variable: You need to explicitly point to the directory containing EMBL.pm.  
+ # Use the base directory of your Conda environment for the path below:  
+   export PERL5LIB="<PATH TO REPEATMASKER CONDA>/share/RepeatMasker:$PERL5LIB"
+
+# Run the script: The buildRMLibFromEMBL.pl script should now execute successfully.  
+   buildRMLibFromEMBL.pl dfam.embl > dfam.fa
+```
+
+- Method 2: Download the [Famdb](https://www.dfam.org/releases/current/families/FamDB/) partition(s) you want and query with famdb.py 
+```python
+# Example famdb.py query 
+python famdb.py -i <PATH TO LOCAL HD5 DB> families ...
+```
+- See [Famdb documentations](https://github.com/Dfam-consortium/FamDB) for full usage
+
+3.) Edit ```RepeatClassifer``` perl script to have the new path of your local RepeatsMasker.lib and RepeatPeps.lib
+```perl
+ # ~ Line 200
+my $TE_PROTEIN_LIB = "<PATH>/RepeatPeps.lib";
+my $TE_CONSENSUS_LIB = "<PATH>/RepeatMasker.lib";
+```
+
+## Structural Annotation 
+
+## Functional Annotation 
