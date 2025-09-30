@@ -34,7 +34,7 @@ This directory contents important files and metrics for my *Gryllus firmus* geno
 
 
 ## Removing Any Remenant Adapters and Inital Filtration 
-[Stats](Gfirm/Gfirm_hifi_reads.stats)  
+[Stats](./Gfirm_hifi_reads.stats)  
 **Looks Good!**
 
 
