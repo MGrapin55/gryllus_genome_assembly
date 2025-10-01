@@ -1,0 +1,6 @@
+# Quality Control Tools to use on PacBio HiFi Data
+# Fastqc
+# Longqc 
+# Nanoplot
+
+# Currently I have not made a script to evaluate QC because my HiFi data already came with a QC report

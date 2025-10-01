@@ -87,6 +87,12 @@ my $TE_PROTEIN_LIB = "<PATH>/RepeatPeps.lib";
 my $TE_CONSENSUS_LIB = "<PATH>/RepeatMasker.lib";
 ```
 
+### Optimizing the Repeat Annotations 
+RepeatModelers is fairly slow because some of the programs in the pipeline are single threaded. This doesn't allow for use to have much throughput when search large genomes. I was was searching this out and came across this [issue](https://github.com/Dfam-consortium/RepeatModeler/issues/40#issuecomment-527565134) and the authors advice was to increase the number of rounds.    
+
+The thought is by increasing the number of rounds then we will gain more coverage, but there is a a trade off for computational power/time. 
+
+
 ## Structural Annotation 
 
 ## Functional Annotation 
