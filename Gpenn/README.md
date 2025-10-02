@@ -89,8 +89,24 @@ Searching for Repeats
  ```
  ***It still only grabbed **270,000,000 bp** of sequences. Not sure why this is behaving that way.***
 
- * Implementation of ``DeepTE`` and ```TERL```  
+ ### Implementation of ``DeepTE`` and ```TERL```  
  
+* DeepTE 
+    - Orginal Unknown: 1475
+    - Unknown After DeepTE: 411
+
+* TERL 
+    - 367 sequences removed based on NonTE classification
+    - Unknown After TERL: 97 (No Classification at all)
+    - **Final set has 1461 sequences**      
+
+Repeat Families: 2436    
+Classified: 2239   **(91.9%)**  
+Unknown: 197  **(8.1%)**  
+
+
+### Repeat Masker
+* Final De Novo Custom Repeat Library: 2436 Sequences
 
 ## Structural Annotation 
 
