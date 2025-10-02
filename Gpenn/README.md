@@ -108,6 +108,15 @@ Unknown: 197  **(8.1%)**
 ### Repeat Masker
 * Final De Novo Custom Repeat Library: 2436 Sequences
 
+
+```
+# Repeat Masker Fasta Headers limited to 50 characters 
+# Used to retain just >Scaffold#
+awk '/^>/{split($0,a,","); print a[1]; next} {print}' input.fasta > output.fasta
+
+```
+
+
 ## Structural Annotation 
 
 ## Functional Annotation 

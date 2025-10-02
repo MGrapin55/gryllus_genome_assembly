@@ -4,8 +4,8 @@
 ## Purpose of the Repository: 
 This repository is meant to provide others out there with informative guide to genome assembly and annotation. This is no means exhuastive but a starting point based on my learned experience. 
 
-## Outline: 
-* **[Quality Control](Assembly/Quality Assessment/README.md)**
+## Outline:  
+* **[Quality Control](<Assembly/Quality Assessment/README.md>)**
 	* Getting Started
 		- Considering Hifi Data
 		- HiFi Data Information 
@@ -34,7 +34,7 @@ This repository is meant to provide others out there with informative guide to g
 		- What Are N and L stats? 
 			- N stats 
 			- L stats
-	* Removing Contamination
+	* Removing Contamination  
 		-[Blobtools](https://github.com/genomehubs/blobtoolkit)
 		- Script: Blobools.sh
 	* Long Read Scaffolding

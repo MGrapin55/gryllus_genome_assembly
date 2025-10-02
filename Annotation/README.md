@@ -93,6 +93,12 @@ RepeatModelers is fairly slow because some of the programs in the pipeline are s
 The thought is by increasing the number of rounds then we will gain more coverage, but there is a a trade off for computational power/time. 
 
 
+### Repeat Maskering 
+
+* Questions about flags: 
+	- Should we include the ```-nolow``` flag? 
+	- how do we get values for flags such as ```-div``` and ```-cutoff```? 
+
 ## Structural Annotation 
 
 ## Functional Annotation 
