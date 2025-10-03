@@ -32,10 +32,19 @@ This directory contents important files and metrics for my *Gryllus pennsylvanic
 ## QC Control 
 
 
-## Removing Any Remenant Adapters and Inital Filtration 
+## Removing Any Remenant Adapters and Initial Filtration 
 
 
 ## Genome Properties 
+
+* Counting 21mers with Meryl 
+    - [Genomescope2](http://genomescope.org/genomescope2.0/analysis.php?code=iiaLIgiTJQNYGKf1fIWu)  
+
+
+![Plot](GpennGenomeScope.png)  
+**Figure:** Gpenn GenomeScope2 Profile      
+
+---
 
 ## Inital Assembly 
     - gfastats
@@ -108,13 +117,16 @@ Unknown: 197  **(8.1%)**
 ### Repeat Masker
 * Final De Novo Custom Repeat Library: 2436 Sequences
 
-
 ```
 # Repeat Masker Fasta Headers limited to 50 characters 
 # Used to retain just >Scaffold#
 awk '/^>/{split($0,a,","); print a[1]; next} {print}' input.fasta > output.fasta
 
 ```
+**RepeatMasker Output Table:** [Gpenn Table](./Gpenn.ls.v2.nuclear.scaffolds.closed.fa.tbl)  
+Generated From the Commad:   
+```RepeatMasker -pa $SLURM_CPUS_PER_TASK -gff -s -a -inv -no_is -norna -xsmall -nolow -div 40 -lib $WKDIR/RepeatMM/ML/${SPECIES}_families.prefix.fa.known.unknown.FINAL -cutoff 225 $FASTA```
+
 
 
 ## Structural Annotation 

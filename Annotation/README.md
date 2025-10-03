@@ -98,6 +98,7 @@ The thought is by increasing the number of rounds then we will gain more coverag
 * Questions about flags: 
 	- Should we include the ```-nolow``` flag? 
 	- how do we get values for flags such as ```-div``` and ```-cutoff```? 
+	- Should we vary these paramters because I think no low will make a difference? 
 
 ## Structural Annotation 
 

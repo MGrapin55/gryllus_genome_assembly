@@ -33,13 +33,19 @@ This directory contents important files and metrics for my *Gryllus firmus* geno
 **Looks Good!**
 
 
-## Removing Any Remenant Adapters and Inital Filtration 
+## Removing Any Remenant Adapters and Initial Filtration 
 [Stats](./Gfirm_hifi_reads.stats)  
 **Looks Good!**
 
 
 ## Genome Properties 
+* Counting 21mers with Meryl 
+    - [Genomescope2](http://genomescope.org/genomescope2.0/analysis.php?code=BfZu5X0bOtf6CA9DEcNc)  
 
+![Plot](GfirmGenomeScope.png)  
+**Figure:** Gfirm GenomeScope2 Profile      
+
+---
 ## Inital Assembly 
     - gfastats
 
@@ -122,6 +128,9 @@ Unknown: 105  **(4.3%)**
 awk '/^>/{split($0,a,","); print a[1]; next} {print}' input.fasta > output.fasta
 
 ```
+**RepeatMasker Output Table:** [Gfirm Table](./Gfirm.ls.v1.nuclear.scaffolds.closed.fa.tbl)  
+Generated From the Commad:   
+```RepeatMasker -pa $SLURM_CPUS_PER_TASK -gff -s -a -inv -no_is -norna -xsmall -nolow -div 40 -lib $WKDIR/RepeatMM/ML/${SPECIES}_families.prefix.fa.known.unknown.FINAL -cutoff 225 $FASTA```
 
 
 ## Structural Annotation 
