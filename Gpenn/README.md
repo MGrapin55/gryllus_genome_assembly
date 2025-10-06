@@ -127,7 +127,14 @@ awk '/^>/{split($0,a,","); print a[1]; next} {print}' input.fasta > output.fasta
 Generated From the Commad:   
 ```RepeatMasker -pa $SLURM_CPUS_PER_TASK -gff -s -a -inv -no_is -norna -xsmall -nolow -div 40 -lib $WKDIR/RepeatMM/ML/${SPECIES}_families.prefix.fa.known.unknown.FINAL -cutoff 225 $FASTA```
 
+Produced a total of 861537515 bp masked.
 
+### Masking NUMTs
+Following approach used in Liu et al. [2024, Mol Phyl Evol](https://doi.org/10.1016/j.ympev.2024.108221)
+
+Addded a additional 1921673 bp soft masked. 
+
+Total of 863459188 bp masked. 
 
 ## Structural Annotation 
 

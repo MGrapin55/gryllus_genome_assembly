@@ -100,6 +100,21 @@ The thought is by increasing the number of rounds then we will gain more coverag
 	- how do we get values for flags such as ```-div``` and ```-cutoff```? 
 	- Should we vary these paramters because I think no low will make a difference? 
 
+
+### Masking NUMTs 
+- NUMTs (Nuclear Mitochondrial DNA segments) are fragments of mitochondrial DNA that have been transferred and integrated into the nuclear genome. These sequences are common in eukaryotic genomes and are typically assumed to be non-coding.
+
+- However, NUMTs can pose a problem in genome annotation and downstream analyses. For example, RNA-Seq reads originating from the actual mitochondrial genome might incorrectly align to NUMT regions in the nuclear genome, potentially leading to spurious gene models or confounding expression analyses. To prevent this, we soft-masked the NUMTs so that they are ignored or downweighted by gene prediction tools.
+
+- Our strategy for detecting NUMTs followed the approach used in Liu et al. [2024, Mol Phyl Evol](https://doi.org/10.1016/j.ympev.2024.108221), a recent study on NUMTs in orthopteran genomes. We used the mitochondrial genome contig identified by MitoHiFi as a query in a BLASTn search against the nuclear genome to identify regions of high sequence similarity. We used the same BLAST parameters as described in the Liu et al. study to ensure consistency and comparability.
+
+
+Want to see how many bases are soft masked between ```RepeatMasker``` and Masking NUMT's? 
+```
+seqkit seq -s $FASTA | grep -v '^>' | tr -cd 'a-z' | wc -c
+
+```
+
 ## Structural Annotation 
 
 ## Functional Annotation 
