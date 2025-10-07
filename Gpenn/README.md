@@ -20,6 +20,7 @@ This directory contents important files and metrics for my *Gryllus pennsylvanic
     - BUSCO
 * [Gap Closing Stats](#gap-closing-stats) 
 #### Annotation
+* [Mitogenome](#mitogenome)
 * [Repeat Masking](#repeatmasking)
     - Repeat Modeler 
     - DeepTE + TERL 
@@ -62,6 +63,10 @@ This directory contents important files and metrics for my *Gryllus pennsylvanic
 ## Gap Closing Stats
 
 # Annotation
+
+## Mitogenome
+Our mitogenome was extracted and annotated using the software [MitoHifi](https://github.com/marcelauliano/MitoHiFi) with a closely related ancestor *Gryllus lineaticeps* producing 16,426 bp assembly.     
+![GpennMitogenome](./Gpenn_final_mitogenome.annotation.png)
 
 ## RepeatMasking 
 ## Results: 
