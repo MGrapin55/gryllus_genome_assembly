@@ -21,7 +21,7 @@ This repository is meant to provide others out there with informative guide to g
 			- L stats
 	* Removing Contamination
 		-[Blobtools](https://github.com/genomehubs/blobtoolkit)
-		- Script: Blobools.sh
+		- Script: Blob.sh
 	* Long Read Scaffolding
 		-[Longstictch Pipeline](https://github.com/bcgsc/LongStitch)
 		- Script: Longstitch.sh 
@@ -33,3 +33,38 @@ This repository is meant to provide others out there with informative guide to g
 		
 		
 ---
+
+## Genome Assembly
+Hifiasm producs an intail contig level draft assembly. It produces a phased assembly and a both a hapolype1 and haplotype2 assemblies for diploid organisms. For the purpose of this analysis we are only continuing on with the phased assembly. 
+
+## Removing Contanmination
+Blobtools is used to remove contamination from other organisms that might have gotten into our sample. This primairly manifests itselfs as bacterial taxa that were present on the sample at the time of DNA extraction. Blobtools identifies this criteria through a blast search and plotting the GC content vs coverage. The idea is that spurious bacterial tax will have lower GC content and appear as outliners from you "blob" that would be your sampled organism. This is a iterative processs with no hard cutoff for filtering out contaminants. It is a process that we want to get it to be as good as possible without removing our own organuisms DNA. 
+
+## Long Read Scaffolding
+Scaffolding is the process of taking our contigious seqeunces (contigs) and joining them together to so that they will make a more contigious "scaffold". This process also introduces gaps (often denoted as N's) but the key is to find a balance of reducing fragmentation and adding gaps. There are a host of scaffolding programs out there, I suggest you look through [Junwei Luo et al. 2021](https://doi.org/10.1093/bib/bbab033) and [genome_assembly_tools](https://github.com/nadegeguiglielmoni/genome_assembly_tools) repository for various programs. 
+
+Currently I only have long read data for assemble so I have decided to use a long read scaffolding approach. The softwas employed is the [Longstictch Pipeline](https://github.com/bcgsc/LongStitch). An outline of the pipeline can be seen here:  [Longstitch-Outline](diagramLS.png)  
+But I suggest you read the [paper](https://doi.org/10.1186/s12859-021-04451-7) for more complete details. I decided not to run the tigmint portion of the pipeline because it was creating many fragments for my assembly. I felt this was talking a step backwards after I had just assemblied with Hifiasm, whose has a good reputation for producing a quality assembly. 
+
+
+## Gap Closing 
+Gap closing is the process of trying to link remaining gaps that exist in the scaffolded assembly. This to YAGcloser uses long reads to span the distance of gaps. If the long read can span the gap then it will connnect it. This is good for relatively short gaps (less than 15,000 bp on average) due to the nature of hifi reads. However I found this method to be fairly ineffective because of the longer gaps existing. 
+
+
+## Some Other Thoughts
+The goal of all assemblies is to have a chromosome level molecule. In practicality a chromosome level assembly is not needed to functional analysis (RNAseq, QTL, etc.) but it ofter preferred when trying to demostrate a quality genome assembly. To this point we would like to get it as contigious as possible. 
+
+Some approaches that have been presented: 
+
+* reference free (de novo)
+	- genomic map (optical, physical, or linkage map)
+	- long range information (Hi-C)
+
+* reference guided 
+	- "show tiling" ([Chromosomer](https://doi.org/10.1186/s13742-016-0141-6), MUMmer)
+
+Excerpt from [Alonge et al 2019](https://doi.org/10.1186/s13059-019-1829-6)  
+> Aside from reference-free approaches, there are also a few tools available for reference-guided scaffolding [14]. For example, Chromosomer and MUMmer’s “show-tiling” utility leverage pairwise alignments to a reference genome for contig scaffolding and have been used to scaffold eukaryotic genomes [15,16,17,18]. RACA is similar, though it also requires paired-end sequencing data to aid scaffolding [19]. Finally, tools such as GOS-ASM and Ragout2 employ multiple sequence aligners to reconcile multiple, potentially diverse contig sets [20, 21]. Though reference-guided scaffolding may introduce erroneous reference bias, it is often substantially faster and less expensive than acquiring the resources for the reference-free methods outlined above. However, current tools for reference-guided scaffolding of eukaryotic genomes have notable shortcomings. Firstly, these tools depend on slower DNA aligners such as BLAST and Nucmer and accordingly require long compute times of several hours to several days for mammalian-sized genomes [22]. This is especially pronounced in tools like Ragout2 that use multiple sequence aligners, such as Cactus, that can require hundreds of CPU hours for large eukaryotic genomes [23]. These aligners are also not robust to repetitive and/or gapped alignments resulting in a significant portion of contigs being unassigned in pseudomolecules. Finally, many of these methods do not internally offer the ability to correct large-scale misassemblies frequently present in draft assemblies of eukaryotic genomes nor report any metrics on conflicts due to true biological differences in the genomes.
+
+
+So which route is the best way to improve our scaffolding? I'm not exactly sure but probably some combination of each and depending on which resoures are available to your system. 
