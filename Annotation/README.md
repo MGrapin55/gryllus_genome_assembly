@@ -117,4 +117,23 @@ seqkit seq -s $FASTA | grep -v '^>' | tr -cd 'a-z' | wc -c
 
 ## Structural Annotation 
 
+- The first step for annotating the genome is structural annotation. Structural annotation involves using reference databases and RNA-seq data as evidence to know which parts of the genome are transcribed. It focuses on identifying and defining the physical components of the genome.
+
+- We have used as input files here:
+	- The .fasta file with our soft-masked cricket genome
+	- The .bam files generated with HiSat2 from the RNA-Seq files (tissue atlas + selection line subsamples)
+	- A protein .fasta file from OrthoDB. OrthoDB presents a catalog of orthologous protein-coding genes across all domains of life, so this can be helpful additional evidence to infer the coding regions of our cricket genome besides the RNA-Seq datasets. To optimize computational time, we have used specifically the [OrthoDB v12 dataset partitioned for Arthropod sequences](https://bioinf.uni-greifswald.de/bioinf/partitioned_odb12/).
+
+
 ## Functional Annotation 
+
+- With the structural annotation complete, we did functional annotation. This step aimed to assign biological meaning to the predicted transcripts and proteins, such as their molecular function, cellular role, and involvement in pathways. In its essence, it is the process of attaching metadata to the transcripts identified by the structural annotation.
+
+- Functional annotation is typically based on:
+	- Sequence homology to well-characterized genes in other organisms.
+	- Conserved protein domains and motifs.
+	- Gene Ontology (GO) terms, KEGG pathways, or Enzyme Commission (EC) numbers.
+	- Experimental evidence, when available.
+
+- This process often involves multiple tools and can be done iteratively to improve accuracy and coverage. In our case, functional annotation was carried out using two complementary tools, ```eggnog-mapper``` and ```InterProScan```. The outputs of these tools were then integrated using ```Funannotate```, which can both perform functional annotation and merge results from multiple sources into a unified functional annotation set that also includes genomic coordinates for transcripts.
+

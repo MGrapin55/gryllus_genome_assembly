@@ -67,8 +67,8 @@ This repository is meant to provide others out there with informative guide to g
 	* Funnctional Annotation
 		- In Processs....
 		
-		
-	
-		
-
 ---
+
+# Acknowledgments: 
+- Consultation for content in the repo has been provided from Leonardo Tresoldi Goncalves, who layed out the foundation for the annotation steps. 
+
