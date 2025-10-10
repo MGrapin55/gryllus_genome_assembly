@@ -68,3 +68,46 @@ Excerpt from [Alonge et al 2019](https://doi.org/10.1186/s13059-019-1829-6)
 
 
 So which route is the best way to improve our scaffolding? I'm not exactly sure but probably some combination of each and depending on which resoures are available to your system. 
+
+
+### RagTag 
+[RagTag](https://github.com/malonge/RagTag) is a tool for referenc guided asemmbly. This tool superseds Ragoo which was the orginal version. It has the core utilies of **correct**, **scaffold**, **patch**, and **merge**. 
+
+### Approach for reference based scaffolding with Ragtag
+1. Pick a suitable reference species (i.e best availdable assembly with the closest relation)
+	- download the genome from NCBI 
+
+2. Extract just the chromosomes so that we can anchor our (contigs/scaffolds) to the reference 
+```
+scaffoldGenome="/path to scaffolding genome/sppXXX.fasta"
+genome="/path to genome/plasmid-filtered.fasta"
+bioawk -c fastx '{print $name}' $scaffoldGenome > scaffold.lst
+
+## !! You have to remove the remaining scaffolds !!
+
+# Get the sequences of the chromosomes 
+seqtk subseq $scaffoldGenome scaffold.lst > reference.fasta
+
+```
+
+3. Run Ragtag Scaffold
+```
+ragtag.py $REF $QUERY -r -C 
+```
+
+4. Match your places sequences to the chromosomes that they were places to
+```
+# Extract Chromosomes 
+seqkit grep -v -n -r -p "^Chr0" ragtag.scaffold.fasta > chr.placed.fasta
+
+
+# Extract Unplaced Scaffolds
+cat ragtag.scaffold.apg | grep "Chr0" | cut -f 6 | grep "Scaffold" > unplaced_scaffolds.txt
+
+seqtk subseq $QUERY unplaced_scaffolds.txt > uplaced_scaffolds.fasta
+```
+
+5. Assess genome completenesss (BUSCO, Quast, etc.)
+
+* Thoughts: 
+	- Should I do this with just contigs? Or having already scaffolded with the longstich pipeline will that improve it? 
