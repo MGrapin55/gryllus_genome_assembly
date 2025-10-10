@@ -92,7 +92,7 @@ seqtk subseq $scaffoldGenome scaffold.lst > reference.fasta
 
 3. Run Ragtag Scaffold
 ```
-ragtag.py $REF $QUERY -r -C 
+ragtag.py scaffold $REF $QUERY -r -C 
 ```
 
 4. Match your places sequences to the chromosomes that they were places to
@@ -111,3 +111,9 @@ seqtk subseq $QUERY unplaced_scaffolds.txt > uplaced_scaffolds.fasta
 
 * Thoughts: 
 	- Should I do this with just contigs? Or having already scaffolded with the longstich pipeline will that improve it? 
+	answer: Do not do it with just contigs, this does not assembly as good and its could be wrong because its more referenced based. 
+	- Should I test it with other species?
+	answer: bimac is the best assembly that exists out there. I tested Gfirm with assimilis and longercericus and it still did not place as many scaffolds.
+
+* Next Steps: 
+	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
