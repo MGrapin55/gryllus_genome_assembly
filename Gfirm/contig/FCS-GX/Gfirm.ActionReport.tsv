@@ -1,0 +1,5 @@
+##[["FCS genome report", 2, 1], {"git-rev": "v0.5.5-9-gfc836c1", "run-date": "Sat Oct 11 22:05:31 2025", "db": {"build-date": "2023-01-24", "seqs": 3025824, "Gbp": 709.264}, "run-info": {"agg-cvg": 0.50219, "asserted-div": "anml:insects", "inferred-primary-divs": ["anml:insects"], "corrected-primary-divs": ["anml:insects"], "genome-hash": "123b9128e3414282"}}]
+#seq_id	start_pos	end_pos	seq_len	action	div	agg_cont_cov	top_tax_name
+ptg000096l	1240035	1242313	4520007	INFO	prok:a-proteobacteria	100	Wolbachia endosymbiont (group B) of Agriphila straminella
+ptg001140l	1	36678	36678	EXCLUDE	prok:a-proteobacteria	59	Gluconobacter cadivus
+ptg001460l	1	43381	43381	EXCLUDE	prok:a-proteobacteria	95	Gluconobacter frateurii

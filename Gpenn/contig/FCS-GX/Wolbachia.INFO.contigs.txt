@@ -1,0 +1,3 @@
+ptg000055l	3175755	3179198	7372523	INFO	prok:a-proteobacteria	88	Wolbachia endosymbiont (group B) of Chorthippus parallelus
+ptg000293l	1691314	1694534	4003219	INFO	prok:a-proteobacteria	100	Wolbachia endosymbiont of Cylisticus convexus
+ptg000293l	1696814	1699540	4003219	INFO	prok:a-proteobacteria	100	Wolbachia endosymbiont (group B) of Agriphila straminella
