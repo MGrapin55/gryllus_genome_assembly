@@ -117,3 +117,20 @@ seqtk subseq $QUERY unplaced_scaffolds.txt > uplaced_scaffolds.fasta
 
 * Next Steps: 
 	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
+
+Steps: 
+Assembly:
+1. HifiAdapterFilter 
+2. Hifiasm 
+3. BlobTools + Busco + Quast (Mitochrondria is left in bc high coverage)
+4. Longstitch (try with tigmint and without)
+5. Ragtag 
+- investigate unplaced
+6. YAGCloser 
+
+Annotation: 
+7. MitoHifi
+8. Repeat Masker 
+9. Mask NUMTs 
+10. Breaker 
+11. Functional Annotation ...
