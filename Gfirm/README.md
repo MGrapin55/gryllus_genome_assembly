@@ -65,7 +65,7 @@ This directory contents important files and metrics for my *Gryllus firmus* geno
 # Annotation
 
 ## Mitogenome
-Our mitogenome was extracted and annotated using the software [MitoHifi](https://github.com/marcelauliano/MitoHiFi) with a closely related ancestor *Gryllus lineaticeps* producing 16,201 bp assembly.     
+Our mitogenome was extracted and annotated using the software [MitoHifi](https://github.com/marcelauliano/MitoHiFi) with a closely related ancestor *Gryllus lineaticeps* producing 16,194 bp assembly.     
 ![GfirmMitogenome](./Gfirm_final_mitogenome.annotation.png)
 
 ## RepeatMasking 
