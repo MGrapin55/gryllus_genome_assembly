@@ -29,6 +29,34 @@ This repository is meant to provide others out there with informative guide to g
 
 # Annotation 
 
+```mermaid
+flowchart TD; 
+	Genome[Assembled Genome]-->RepeatA[Repeat Annotation];
+	RepeatA-->RepeatModeler;
+	RepeatModeler-->Rep[De Novo Repeats];
+	Rep-->RepAA[Repeat Annotations];
+	RepAA-->DeepTE;
+	DeepTE-->TERL;
+	TERL-->Lib[Annotated Repeat Library];
+	Lib-->RepeatMasker;
+	RepeatMasker-->Mask[Masked Genome];
+	MaskNumts["Mask NUMTs<br><a href='https://doi.org/10.1016/j.ympev.2024.108221'><i>Liu et al. (2024)</i></a>"];
+	MaskNumts-->Mask;
+	Mask-->Braker3;
+	Prot[Protein Data];
+	RNA[RNAseq Expression Data]
+	Prot-->Braker3;
+	RNA-->Braker3;
+	Braker3-->Fun[Functional Annotation];
+	Fun-->Egg[EggNog-Mapper];
+	Fun-->Inter[InterPro Scan];
+	Egg-->Funannotate["Funannotate<br><div style='text-align:center; font-size:12px;'><i>Merges Functional Annotations</i></div>"];
+	Inter-->Funannotate;
+	Funannotate-->BlastP
+
+
+```  
+
 ## Repeat Masking 
 
 ### Thoughts on Identifying and Modeling Repeative Elements in a Non-Model Organism

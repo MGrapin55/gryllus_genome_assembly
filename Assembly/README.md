@@ -33,9 +33,24 @@ This repository is meant to provide others out there with informative guide to g
 		
 		
 ---
-
+```mermaid
+flowchart TD; 
+	HifiadapterFilter-->Hifiasm;
+	Hifiasm-->BlobTools;
+	Hifiasm-->Busco[Busco + Gfastats];
+	BlobTools-->CleanContig[Cleaned Contig Assembly];
+	CleanContig-->MitoHifi;
+	CleanContig-->NoMito[Extract and Remove Mitochrondrial Contigs];
+	NoMito-->Busco2[Busco + Gfastats];
+	NoMito-->Longstitch;
+	Longstitch-->Busco3[Busco + Gfastats];
+	Longstitch-->Ragtag;
+	Ragtag-->Busco4[Busco + Gfastats];
+	Ragtag-->YAGCloser;
+	YAGCloser-->Busco5[Busco + Gfastats]
+```
 ## Genome Assembly
-Hifiasm producs an intail contig level draft assembly. It produces a phased assembly and a both a hapolype1 and haplotype2 assemblies for diploid organisms. For the purpose of this analysis we are only continuing on with the phased assembly. 
+Hifiasm producs an intial contig level draft assembly. It produces a phased assembly and a both a hapolype1 and haplotype2 assemblies for diploid organisms. For the purpose of this analysis we are only continuing on with the phased assembly. 
 
 ## Removing Contanmination
 Blobtools is used to remove contamination from other organisms that might have gotten into our sample. This primairly manifests itselfs as bacterial taxa that were present on the sample at the time of DNA extraction. Blobtools identifies this criteria through a blast search and plotting the GC content vs coverage. The idea is that spurious bacterial tax will have lower GC content and appear as outliners from you "blob" that would be your sampled organism. This is a iterative processs with no hard cutoff for filtering out contaminants. It is a process that we want to get it to be as good as possible without removing our own organuisms DNA. 
@@ -118,23 +133,6 @@ seqtk subseq $QUERY unplaced_scaffolds.txt > uplaced_scaffolds.fasta
 * Next Steps: 
 	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
 
-Steps: Assembly
-```mermaid
-flowchart TD; 
-	HifiadapterFilter-->Hifiasm;
-	Hifiasm-->BlobTools;
-	Hifiasm-->Busco[Busco + Gfastats];
-	BlobTools-->CleanContig[Cleaned Contig Assembly];
-	CleanContig-->MitoHifi;
-	CleanContig-->NoMito[Extract and Remove Mitochrondrial Contigs];
-	NoMito-->Busco2[Busco + Gfastats];
-	NoMito-->Longstitch;
-	Longstitch-->Busco3[Busco + Gfastats];
-	Longstitch-->Ragtag;
-	Ragtag-->Busco4[Busco + Gfastats];
-	Ragtag-->YAGCloser;
-	YAGCloser-->Busco5[Busco + Gfastats]
-```
 Assembly:
 1. HifiAdapterFilter 
 2. Hifiasm 
@@ -145,38 +143,3 @@ Assembly:
 5. Ragtag 
 - investigate unplaced (repeats and repeat families)
 6. YAGCloser 
-
-Steps:Annotation
-```mermaid
-flowchart TD; 
-	Genome[Assembled Genome]-->RepeatA[Repeat Annotation];
-	RepeatA-->RepeatModeler;
-	RepeatModeler-->Rep[De Novo Repeats];
-	Rep-->RepAA[Repeat Annotations];
-	RepAA-->DeepTE;
-	DeepTE-->TERL;
-	TERL-->Lib[Annotated Repeat Library];
-	Lib-->RepeatMasker;
-	RepeatMasker-->Mask[Masked Genome];
-	MaskNumts["Mask NUMTs<br><a href='https://doi.org/10.1016/j.ympev.2024.108221'><i>Liu et al. (2024)</i></a>"];
-	MaskNumts-->Mask;
-	Mask-->Braker3;
-	Prot[Protein Data];
-	RNA[RNAseq Expression Data]
-	Prot-->Braker3;
-	RNA-->Braker3;
-	Braker3-->Fun[Functional Annotation];
-	Fun-->Egg[EggNog-Mapper];
-	Fun-->Inter[InterPro Scan];
-	Egg-->Funannotate["Funannotate<br><div style='text-align:center; font-size:12px;'><i>Merges Functional Annotations</i></div>"];
-	Inter-->Funannotate;
-	Funannotate-->BlastP
-
-
-```  
-
-Annotation:  
-8. Repeat Masker   
-9. Mask NUMTs   
-10. Breaker   
-11. Functional Annotation ...  
