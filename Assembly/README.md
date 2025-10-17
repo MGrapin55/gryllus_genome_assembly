@@ -118,7 +118,23 @@ seqtk subseq $QUERY unplaced_scaffolds.txt > uplaced_scaffolds.fasta
 * Next Steps: 
 	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
 
-Steps: 
+Steps: Assembly
+```mermaid
+flowchart TD; 
+	HifiadapterFilter-->Hifiasm;
+	Hifiasm-->BlobTools;
+	Hifiasm-->Busco[Busco + Gfastats];
+	BlobTools-->CleanContig[Cleaned Contig Assembly];
+	CleanContig-->MitoHifi;
+	CleanContig-->NoMito[Extract and Remove Mitochrondrial Contigs];
+	NoMito-->Busco2[Busco + Gfastats];
+	NoMito-->Longstitch;
+	Longstitch-->Busco3[Busco + Gfastats];
+	Longstitch-->Ragtag;
+	Ragtag-->Busco4[Busco + Gfastats];
+	Ragtag-->YAGCloser;
+	YAGCloser-->Busco5[Busco + Gfastats]
+```
 Assembly:
 1. HifiAdapterFilter 
 2. Hifiasm 
@@ -130,8 +146,37 @@ Assembly:
 - investigate unplaced (repeats and repeat families)
 6. YAGCloser 
 
-Annotation: 
-8. Repeat Masker 
-9. Mask NUMTs 
-10. Breaker 
-11. Functional Annotation ...
+Steps:Annotation
+```mermaid
+flowchart TD; 
+	Genome[Assembled Genome]-->RepeatA[Repeat Annotation];
+	RepeatA-->RepeatModeler;
+	RepeatModeler-->Rep[De Novo Repeats];
+	Rep-->RepAA[Repeat Annotations];
+	RepAA-->DeepTE;
+	DeepTE-->TERL;
+	TERL-->Lib[Annotated Repeat Library];
+	Lib-->RepeatMasker;
+	RepeatMasker-->Mask[Masked Genome];
+	MaskNumts["Mask NUMTs<br><a href='https://doi.org/10.1016/j.ympev.2024.108221'><i>Liu et al. (2024)</i></a>"];
+	MaskNumts-->Mask;
+	Mask-->Braker3;
+	Prot[Protein Data];
+	RNA[RNAseq Expression Data]
+	Prot-->Braker3;
+	RNA-->Braker3;
+	Braker3-->Fun[Functional Annotation];
+	Fun-->Egg[EggNog-Mapper];
+	Fun-->Inter[InterPro Scan];
+	Egg-->Funannotate["Funannotate<br><div style='text-align:center; font-size:12px;'><i>Merges Functional Annotations</i></div>"];
+	Inter-->Funannotate;
+	Funannotate-->BlastP
+
+
+```  
+
+Annotation:  
+8. Repeat Masker   
+9. Mask NUMTs   
+10. Breaker   
+11. Functional Annotation ...  
