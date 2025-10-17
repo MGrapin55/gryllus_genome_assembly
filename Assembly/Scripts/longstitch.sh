@@ -66,6 +66,6 @@ echo "# ------------------------------------------------------------------------
 
 # longstitch pipeline command 
 echo "Starting Longstitch Run..."
-longstitch ntLink-arks draft="${d%.fa}" reads="${r%.fastq.gz}" G="$size" longmap=hifi out_prefix="$Prefix" t=$SLURM_CPUS_PER_TASK rounds=5
+longstitch ntLink-arks draft="${d%.fa}" reads="${r%.fastq.gz}" G="$size" longmap=hifi out_prefix="$Prefix" t=$SLURM_CPUS_PER_TASK rounds=5 gap_fill=True
 
 echo "Done with longstitch!"
