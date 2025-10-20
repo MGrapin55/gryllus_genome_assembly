@@ -104,10 +104,15 @@ bioawk -c fastx '{print $name}' $scaffoldGenome > scaffold.lst
 seqtk subseq $scaffoldGenome scaffold.lst > reference.fasta
 
 ```
+**Some Prep I Recommend**
+```
+# Longstictch Output (Remove the commas of extra information)
+awk '/^>/{split($0,a,","); print a[1]; next} {print}' <longstitch.fa> > Ragtag/longstitch.fa
+```
 
 3. Run Ragtag Scaffold
 ```
-ragtag.py scaffold $REF $QUERY -r -C 
+ragtag.py scaffold $REF $QUERY -r -C -u	#set threads as needed (-t)
 ```
 
 4. Match your places sequences to the chromosomes that they were places to
@@ -117,21 +122,39 @@ seqkit grep -v -n -r -p "^Chr0" ragtag.scaffold.fasta > chr.placed.fasta
 
 
 # Extract Unplaced Scaffolds
-cat ragtag.scaffold.apg | grep "Chr0" | cut -f 6 | grep "Scaffold" > unplaced_scaffolds.txt
+cat ragtag.scaffold.apg | grep "Chr0" | cut -f 6 | grep "scaffold" > unplaced_scaffolds.txt
 
-seqtk subseq $QUERY unplaced_scaffolds.txt > uplaced_scaffolds.fasta
+seqtk subseq $QUERY unplaced_scaffolds.txt > unplaced_scaffolds.fasta
 ```
 
-5. Assess genome completenesss (BUSCO, Quast, etc.)
+5. Add readable chromosome names and unplaced suffixes
+```bash
+# keys.txt is assimilis acesssion (key) chromsome (level) (cutting the sequence_report.tsv from ncbi)
+awk 'NR==FNR {map[$1]=$2; next} 
+     /^>/ {
+        split($0, id, "_"); 
+        key = substr(id[1], 2); 
+        if (key in map) 
+            print ">chr_" map[key]; 
+        else 
+            print $0; 
+        next
+     } 
+     {print}' keys.txt input.fasta > renamed.fasta
 
-* Thoughts: 
-	- Should I do this with just contigs? Or having already scaffolded with the longstich pipeline will that improve it? 
-	answer: Do not do it with just contigs, this does not assembly as good and its could be wrong because its more referenced based. 
-	- Should I test it with other species?
-	answer: bimac is the best assembly that exists out there. I tested Gfirm with assimilis and longercericus and it still did not place as many scaffolds.
+# add unplaced suffix to unplaced scaffolds
+awk '/^>/ {print $0 "_unplaced"; next} {print}' <unplaced_scaffolds.fasta> > output.fasta
 
-* Next Steps: 
-	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
+# Concatatenate the chromosomes and unplaced scaffolds 
+cp chr.fasta concat/final.fasta
+cat unplaced_scaffolds.fasta >> concat/final.fasta
+
+```  
+  
+6. Assess genome completenesss (BUSCO, Gfastats, etc.)
+
+**Proceedd to Gap Closing with YAGcloser**
+
 
 Assembly:
 1. HifiAdapterFilter 
@@ -143,3 +166,13 @@ Assembly:
 5. Ragtag 
 - investigate unplaced (repeats and repeat families)
 6. YAGCloser 
+
+
+* Thoughts: 
+	- Should I do this with just contigs? Or having already scaffolded with the longstich pipeline will that improve it? 
+	answer: Do not do it with just contigs, this does not assembly as good and its could be wrong because its more referenced based. 
+	- Should I test it with other species?
+	answer: bimac is the best assembly that exists out there. I tested Gfirm with assimilis and longercericus and it still did not place as many scaffolds.
+
+* Next Steps: 
+	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
