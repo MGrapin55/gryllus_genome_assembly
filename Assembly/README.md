@@ -153,8 +153,19 @@ cat unplaced_scaffolds.fasta >> concat/final.fasta
   
 6. Assess genome completenesss (BUSCO, Gfastats, etc.)
 
-**Proceedd to Gap Closing with YAGcloser**
+**Proceed to Gap Closing with YAGcloser**
 
+
+### Linkage Map 
+**Specific to Gpenn and Gfirm** 
+The thought with using the linkage map is that we can scaffold the genomes better based on known locations of loci. Since we did chromosome level assembly with *G.assimilis* we have a large portion (~1.86 gb) in chromosome level scaffolds. However there are quite a few remaining scaffolds that might have markers located on them. These would be candidates for futher scaffolding and potential placement. This method also acts a validation method that will check to make sure that loci are belonging to the correct chromosome. Specifically, if enough markers are present we can declare that chromosome a specific number (ex. X). 
+
+This works by aligning our markers aganist the our new reference genome, and then relating those scaffold positions to the linkage map. 
+
+## Purging Haplotigs 
+This section discusses my reasoning why we didn't run ```purge haplotigs```. 1 First, hifiasm runs a internal purging pipeline that is suppose to resolve haplotigs fairly good. When checking with purgue haplotigs, there was a single peak. I interperted this as we only had the haloptigs. The demo for purge haplotigs clearly has a double peak, and likely was made in a time when hifiasms internal purging (or other assemblers) was not as good. However, when I did test running purge haplotigs it removed a signigigant number of contigs. This did not image the BUSCO scores, but it did redunce the genome sizes. Specifically, for *G.pennsylvanicus* this drop the bp to below the genomescope predicted size. Which is a independent measure based on Kmer frequencies. 
+
+My summary, we likely have some haplotigs that slipped through but at this moment it was clear whether this was true repeative content or just haplotigs. This can be a question of future investigation when we try to interate on the assembly and get it better. But for now it is going to be good enough, so we dont get rid of information. 
 
 Assembly:
 1. HifiAdapterFilter 
