@@ -65,6 +65,8 @@ But I suggest you read the [paper](https://doi.org/10.1186/s12859-021-04451-7) f
 ## Gap Closing 
 Gap closing is the process of trying to link remaining gaps that exist in the scaffolded assembly. This to YAGcloser uses long reads to span the distance of gaps. If the long read can span the gap then it will connnect it. This is good for relatively short gaps (less than 15,000 bp on average) due to the nature of hifi reads. However I found this method to be fairly ineffective because of the longer gaps existing. 
 
+Now that we have a chromosome level assembly I it appears that there is not enough support for gap closing. I am trying the gap closing but will likely just skip it beause its not closing any gaps with enough support. See [github issue](https://github.com/merlyescalona/yagcloser/issues/3).  
+
 
 ## Some Other Thoughts
 The goal of all assemblies is to have a chromosome level molecule. In practicality a chromosome level assembly is not needed to functional analysis (RNAseq, QTL, etc.) but it ofter preferred when trying to demostrate a quality genome assembly. To this point we would like to get it as contigious as possible. 
