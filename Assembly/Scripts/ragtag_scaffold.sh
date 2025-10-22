@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=1:00:00
+#SBATCH --time=00:20:00
 #SBATCH --job-name=ragtag_scaffold
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -10,6 +10,7 @@
 #SBATCH --error=./std.err/%x.%J.err
 #SBATCH --output=./std.out/%x.%J.out
 #SBATCH --partition=batch
+#SBATCH --qos=short
 set -euo pipefail
 # ENV
 module purge
@@ -27,7 +28,7 @@ set -eou pipefail
 # Directory Location 
 OUTDIR=$1
 
-# Path to reference fasta (change ot your reference)
+# Path to reference fasta
 REF="/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/assimilis_chr_reference.fa"
 
 # Path to query fasta
@@ -42,7 +43,7 @@ V=1
 mkdir -p $OUTDIR
 
 # scaffold a query assembly
-ragtag.py scaffold $REF $QUERY -o $OUTDIR -t $SLURM_CPUS_PER_TASK -r -u -C
+ragtag.py scaffold $REF $QUERY -o $OUTDIR -t $SLURM_CPUS_PER_TASK -r -u -i 0.95 -a 0.95 -s 0.95
 
 # scaffolding options:
 #  -e <exclude.txt>     list of reference sequences to ignore [null]
