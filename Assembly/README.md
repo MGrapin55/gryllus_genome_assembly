@@ -90,6 +90,9 @@ So which route is the best way to improve our scaffolding? I'm not exactly sure 
 ### RagTag 
 [RagTag](https://github.com/malonge/RagTag) is a tool for referenc guided asemmbly. This tool superseds Ragoo which was the orginal version. It has the core utilies of **correct**, **scaffold**, **patch**, and **merge**. 
 
+**Key Point:**  
+Ragtag scaffold has confidence parameters that control for the placement of contigs/scaffolds. After reading over the original [paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1829-6#Sec13) I have decided to set a more strict limit of 0.95 confidence. 
+
 ### Approach for reference based scaffolding with Ragtag
 1. Pick a suitable reference species (i.e best availdable assembly with the closest relation)
 	- download the genome from NCBI 
@@ -111,10 +114,30 @@ seqtk subseq $scaffoldGenome scaffold.lst > reference.fasta
 # Longstictch Output (Remove the commas of extra information)
 awk '/^>/{split($0,a,","); print a[1]; next} {print}' <longstitch.fa> > Ragtag/longstitch.fa
 ```
+** A quicker way** 
+```
+# keys.txt is assimilis acesssion (key) chromsome (level) (cutting the sequence_report.tsv from ncbi)
+awk 'NR==FNR {map[$1]=$2; next} 
+     /^>/ {
+        split($0, id, "_"); 
+        key = substr(id[1], 2); 
+        if (key in map) 
+            print ">chr_" map[key]; 
+        else 
+            print $0; 
+        next
+     } 
+     {print}' keys.txt input.fasta > renamed.fasta
+
+	# Rename to unplaced
+	 sed -i 's/_RagTag/_unplaced/g' filename.txt
+
+```
 
 3. Run Ragtag Scaffold
 ```
 ragtag.py scaffold $REF $QUERY -r -C -u	#set threads as needed (-t)
+# recommend setting higher confidence values (0.95)
 ```
 
 4. Match your places sequences to the chromosomes that they were places to
@@ -164,10 +187,26 @@ The thought with using the linkage map is that we can scaffold the genomes bette
 
 This works by aligning our markers aganist the our new reference genome, and then relating those scaffold positions to the linkage map. 
 
-## Purging Haplotigs 
-This section discusses my reasoning why we didn't run ```purge haplotigs```. 1 First, hifiasm runs a internal purging pipeline that is suppose to resolve haplotigs fairly good. When checking with purgue haplotigs, there was a single peak. I interperted this as we only had the haloptigs. The demo for purge haplotigs clearly has a double peak, and likely was made in a time when hifiasms internal purging (or other assemblers) was not as good. However, when I did test running purge haplotigs it removed a signigigant number of contigs. This did not image the BUSCO scores, but it did redunce the genome sizes. Specifically, for *G.pennsylvanicus* this drop the bp to below the genomescope predicted size. Which is a independent measure based on Kmer frequencies.   
+* processing the bam file 
+```samtools view -F 0x100 <bam> | cut -f 1,3,4``` (keeps only primary and unaligned)
 
-My summary, we likely have some haplotigs that slipped through but at this moment it was clear whether this was true repeative content or just haplotigs. This can be a question of future investigation when we try to interate on the assembly and get it better. But for now it is going to be good enough, so we dont get rid of information. 
+## Purging Haplotigs 
+This section discusses my reasoning why we didn't run ```purge haplotigs```. 1 First, hifiasm runs a internal purging pipeline that is suppose to resolve haplotigs fairly good. When checking with purgue haplotigs, there was a single peak. I interperted this as we only had the haloptigs. The demo for purge haplotigs clearly has a double peak, and likely was made in a time when hifiasms internal purging (or other assemblers) was not as good. However, when I did test running purge haplotigs it removed a signigigant number of contigs. This did not damage the BUSCO scores, but it did reduce the genome sizes. Specifically, for *G.pennsylvanicus* this drop the bp to below the genomescope predicted size. Which is a independent measure based on Kmer frequencies.   
+
+My summary, we likely have some haplotigs that slipped through but at this moment it was not clear whether this was true repeative content or just haplotigs. This can be a question of future investigation when we try to interate on the assembly and get it better. But for now it is going to be good enough, so we dont get rid of information. 
+
+## Chromosome level scaffold naming convention   
+
+In both the cases of *G.bimaculatus* and *G.assimilis* they named there chromosomes convention in order of size (largest to smallest). Currenly, our assemblies are not at chromosomal level scaffolds for all chromosomes. (ie. there are still some unplaced scaffolds that are larger.)
+
+| Case                    | Strategy                | Example                |
+| ----------------------- | ----------------------- | ---------------------- |
+| Known chromosomes       | Match to reference      | `chr1`, `chr2`, `chrX` |
+| No reference            | Sort by size or linkage | `chr1`–`chrN`          |
+| Unplaced                | Keep consistent suffix  | `chrUn_#`              |
+| Mitochondrial / plastid | Use `chrM` / `chrC`     | `chrM`, `chrC`         |
+| Multiple assemblies     | Add prefix or version   | `GaChr1_v1`            |
+
 
 Assembly:
 1. HifiAdapterFilter 
