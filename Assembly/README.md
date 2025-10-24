@@ -91,7 +91,7 @@ So which route is the best way to improve our scaffolding? I'm not exactly sure 
 [RagTag](https://github.com/malonge/RagTag) is a tool for referenc guided asemmbly. This tool superseds Ragoo which was the orginal version. It has the core utilies of **correct**, **scaffold**, **patch**, and **merge**. 
 
 **Key Point:**  
-Ragtag scaffold has confidence parameters that control for the placement of contigs/scaffolds. After reading over the original [paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1829-6#Sec13) I have decided to set a more strict limit of 0.95 confidence. 
+Ragtag scaffold has confidence parameters that control for the placement of contigs/scaffolds. After reading over the original [paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1829-6#Sec13) I have decided to set a more strict limit of 0.95 confidence for a trial. After reviewing some of the literature for the use of ```Ragtag``` most people use the default parameters and check with other independent sources. I have checked witht he linkage make to make sure the limited markers are mapping to the same "super-scaffold".
 
 ### Approach for reference based scaffolding with Ragtag
 1. Pick a suitable reference species (i.e best availdable assembly with the closest relation)
