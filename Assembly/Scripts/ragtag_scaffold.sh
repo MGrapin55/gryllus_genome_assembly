@@ -43,7 +43,8 @@ V=1
 mkdir -p $OUTDIR
 
 # scaffold a query assembly
-ragtag.py scaffold $REF $QUERY -o $OUTDIR -t $SLURM_CPUS_PER_TASK -r -u -i 0.95 -a 0.95 -s 0.95
+ragtag.py scaffold $REF $QUERY -o $OUTDIR -t $SLURM_CPUS_PER_TASK -r -u
+# (optional parameters to play with if you want more strict)  -i 0.95 -a 0.95 -s 0.95
 
 # scaffolding options:
 #  -e <exclude.txt>     list of reference sequences to ignore [null]
