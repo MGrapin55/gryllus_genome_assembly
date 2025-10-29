@@ -128,6 +128,8 @@ The thought is by increasing the number of rounds then we will gain more coverag
 	- how do we get values for flags such as ```-div``` and ```-cutoff```? 
 	- Should we vary these paramters because I think no low will make a difference? 
 
+* There parameters are approiate. 
+
 
 ### Masking NUMTs 
 - NUMTs (Nuclear Mitochondrial DNA segments) are fragments of mitochondrial DNA that have been transferred and integrated into the nuclear genome. These sequences are common in eukaryotic genomes and are typically assumed to be non-coding.

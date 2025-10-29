@@ -225,6 +225,3 @@ Assembly:
 	answer: Do not do it with just contigs, this does not assembly as good and its could be wrong because its more referenced based. 
 	- Should I test it with other species?
 	answer: bimac is the best assembly that exists out there. I tested Gfirm with assimilis and longercericus and it still did not place as many scaffolds.
-
-* Next Steps: 
-	- Investigate the unplaced scaffolds (repeats, gc content, blast, linkage map)
