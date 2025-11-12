@@ -67,6 +67,15 @@ Blobtools removed non arthopod or unclassfied blast hits. Results were consisten
 
 ## Stats Afters Contaminant Removal 
 
+contigs: 3311  
+Total contig length: 2038806032  
+Average contig length: 615767.45  
+Contig N50: 4871741  
+Contig auN: 6652482.62  
+Contig L50: 114  
+Largest contig: 28910404  
+Smallest contig: 14076  
+
     ***** Results: *****
 
 	C:97.7%[S:91.8%,D:5.9%],F:0.6%,M:1.7%,n:3114,E:21.9%	   
@@ -85,6 +94,17 @@ Assembly Statistics:
 
 
 ## Scaffolding 
+longstich: 
+
+scaffolds: 3010  
+Total scaffold length: 2043407925  
+Average scaffold length: 678873.06  
+Scaffold N50: 6734975  
+Scaffold auN: 9665702.93  
+Scaffold L50: 80  
+Largest scaffold: 40318974  
+Smallest scaffold: 14076  
+
 	***** Results: *****
 
 	C:97.8%[S:92.0%,D:5.9%],F:0.5%,M:1.7%,n:3114,E:21.9%	   
