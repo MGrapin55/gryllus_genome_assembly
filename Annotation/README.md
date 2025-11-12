@@ -167,3 +167,73 @@ seqkit seq -s $FASTA | grep -v '^>' | tr -cd 'a-z' | wc -c
 
 - This process often involves multiple tools and can be done iteratively to improve accuracy and coverage. In our case, functional annotation was carried out using two complementary tools, ```eggnog-mapper``` and ```InterProScan```. The outputs of these tools were then integrated using ```Funannotate```, which can both perform functional annotation and merge results from multiple sources into a unified functional annotation set that also includes genomic coordinates for transcripts.
 
+### ```eggnog-mapper```
+* Running ```eggnog-mapper``` on (http://eggnog-mapper.embl.de/) becuase software requirements and dependencies for  ```eggnog-mapper``` tend to be fickle to set up. Since I am only using it for these two instances I am avoiding the setup. 
+
+
+
+
+### ```InterProScan```
+* Running ```InterProScan``` on [Galaxy](https://usegalaxy.org/) becuase software requirements and dependencies for  ```InterProScan``` tend to be fickle to set up. Since I am only using it for these two instances I am avoiding the setup. 
+
+* **```InterProScan```** requireds asterisks (*) to be removed prior to the run. I did this like so:
+```sed 's/\*//g' braker.aa > braker.aa.NoStop```
+
+* Select the **XML** output format option for later use with ```Funannotate```  
+
+
+
+### ```Funannotate```
+
+
+**Message From Conda install**: You will have to do this instructions. 
+```
+##########################################################################################
+All Users:
+  You will need to setup the funannotate databases using funannotate setup.
+  The location of these databases on the file system is your decision and the
+  location can be defined using the FUNANNOTATE_DB environmental variable.
+
+  To set this up in your conda environment you can run the following:
+    echo "export FUNANNOTATE_DB=/your/path" > /mnt/nrdstor/moorelab/mgrapin2/funannotate/etc/conda/activate.d/funannotate.sh
+    echo "unset FUNANNOTATE_DB" > /mnt/nrdstor/moorelab/mgrapin2/funannotate/etc/conda/deactivate.d/funannotate.sh
+
+  You can then run your database setup using funannotate:
+    funannotate setup -i all
+
+  Due to licensing restrictions, if you want to use GeneMark-ES/ET, you will need to install manually:
+  download and follow directions at http://topaz.gatech.edu/GeneMark/license_download.cgi
+  ** note you will likely need to change shebang line for all perl scripts:
+    change: #!/usr/bin/perl to #!/usr/bin/env perl
+
+
+Mac OSX Users:
+  Augustus and Trinity cannot be properly installed via conda/bioconda at this time. However,
+  they are able to be installed manually using a local copy of GCC (gcc-8 in example below).
+
+  Install augustus using this repo:
+    https://github.com/nextgenusfs/augustus
+
+  To install Trinity v2.15.2, download the source code and compile using GCC/G++:
+    wget https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.15.2/trinityrnaseq-v2.15.2.FULL.tar.gz
+    tar xzvf trinityrnaseq-v2.15.2.FULL.tar.gz
+    cd trinityrnaseq-v2.15.2
+    make CC=gcc-8 CXX=g++-8
+    echo "export TRINITY_HOME=/your/path" > /mnt/nrdstor/moorelab/mgrapin2/funannotate/etc/conda/activate.d/trinity.sh
+    echo "unset TRINITY_HOME" > /mnt/nrdstor/moorelab/mgrapin2/funannotate/etc/conda/deactivate.d/trinity.sh
+
+##########################################################################################
+```
+
+Steps to install ```Funannotate``` databases: 
+```
+To set this up in your conda environment you can run the following:
+    echo "export FUNANNOTATE_DB=/your/path" > /conda path/etc/conda/activate.d/funannotate.sh
+    echo "unset FUNANNOTATE_DB" > /conda path/etc/conda/deactivate.d/funannotate.sh
+
+  You can then run your database setup using funannotate:
+    funannotate setup -i all
+	# Does not install specific busco lineages by default (insecta_odb9) 
+	funannotate setup -b insecta
+
+```

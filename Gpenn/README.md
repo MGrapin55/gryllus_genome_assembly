@@ -48,18 +48,18 @@ Retained 99.99% of data. Consistent with high qulaity sequencing.
 ---
 
 ## Inital Assembly 
-gfastats:
-contigs	7844
-Total contig length	2273363221
-Average contig length	289821.93
-Contig N50	6004226
-Contig auN	6824953.12
-Contig L50	113
-Contig NG50	6278414
-Contig auNG	7100375.01
-Contig LG50	106
-Largest contig	26619483
-Smallest contig	8911
+gfastats:  
+contigs	7844  
+Total contig length	2273363221  
+Average contig length	289821.93  
+Contig N50	6004226  
+Contig auN	6824953.12  
+Contig L50	113  
+Contig NG50	6278414  
+Contig auNG	7100375.01  
+Contig LG50	106  
+Largest contig	26619483  
+Smallest contig	8911  
 
 ## BlobTools to Remove Contaminants 
 Removed non arthopoda or unclassifed blast hits. Independently checked with NCBI FCS-GX and had similair results. Additionally removed mitochrondiral congtigs at the step with ```mitohifi```. 
@@ -82,11 +82,31 @@ Assembly Statistics:
 	0.000%	Percent gaps
 	6 Mbp	Contigs N50
 
+contigs: 3176  
+Total contig length: 2099622468  
+Average contig length: 661090.20  
+Contig N50: 6856792  
+Contig auN: 7386014.64  
+Contig L50: 99  
+Largest contig: 26619483  
+Smallest contig: 14768  
 
 
 
 ## Scaffolding 
 longstitch: 
+
+gfastats:
+scaffolds: 2924  
+Total scaffold length: 2103861570  
+Average scaffold length: 719514.90  
+Scaffold N50: 7924997  
+Scaffold auN: 9406732.93  
+Scaffold L50: 79  
+Largest scaffold: 26975259  
+Smallest scaffold: 14768  
+
+
 	***** Results: *****
 
 	C:97.6%[S:94.0%,D:3.7%],F:0.6%,M:1.8%,n:3114,E:22.6%	   
