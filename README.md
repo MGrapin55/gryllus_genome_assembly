@@ -74,9 +74,15 @@ This repository is meant to provide others out there with informative guide to g
 
 ## Table2asn command line arguements
 
+1.) Download table2asn from NCBI [FTP](https://ftp.ncbi.nlm.nih.gov/asn1-converters/by_program/table2asn/)
+2.) unzip it (Note: linux verision I inlcude gunzip -f)
+3.) Set permissions to exclutable 
+4.) ./table2asn -h 
+
 Arguements Needed for our submission: 
 ```
-table2asn
+table2asn -i <Infile.fsa> -outdir <$OUTDIR> -t <template.sbt> -f <annotations.tbl> -linkage-evidence-file <gaps.tbl> \
+-euk -M n -j [organism=<species taxa name>]
 
 -i <File_In>
    Single Input File
