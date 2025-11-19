@@ -81,8 +81,13 @@ This repository is meant to provide others out there with informative guide to g
 
 Arguements Needed for our submission: 
 ```
-table2asn -i <Infile.fsa> -outdir <$OUTDIR> -t <template.sbt> -f <annotations.tbl> -linkage-evidence-file <gaps.tbl> \
--euk -M n -j [organism=<species taxa name>]
+# Orginal command run 
+./table2asn -i Gpenn.fsa -outdir OUTPUT -t template.sbt -f Gryllus_pennsylvanicus_blast.gff3 -l unspecified -l align-genus -gaps-min 10 -euk -M n -j "[organism=Gryllus pennsylvanicus]" -J -c w -locus-tag-prefix ACWDOJ -V b -Z
+```
+
+```
+./table2asn -i <Infile.fsa> -outdir <$OUTDIR> -t <template.sbt> -f <gff or annotations.tbl> -linkage-evidence-file <gaps.tbl> \
+-euk -M n -j "[organism=<species taxa name>]" -J -c w -locus-tag-prefix <locus tag prefix> -V b -Z
 
 -i <File_In>
    Single Input File
