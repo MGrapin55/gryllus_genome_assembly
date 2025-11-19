@@ -250,3 +250,52 @@ Toal soft masked bases: 862637439 bp
 
 
 ## Functional Annotation 
+
+
+
+
+# NCBI Upload
+
+## *.stats
+
+## *.dr
+
+### NO_ANNOTATION: 2319 bioseqs have no features   
+* checked each gff3 file (braker, funnanotate, blastp) each were still missing same values. (Expection: braker had 2318)
+
+Reasoning: 
+* Don't know why these is some many sequences with no features. Some might be because softmasked so it has repeative features that were not considered in braker annotation. But It seems to be legitiment or a larger problem with a software but not from a informatic choice I made.  
+
+### GAPS: 31 sequences contain gaps
+* Not sure why this is. I created 572 gaps. (Recongized in *.stats file)  
+* This is correct:
+	* Resoning: "NCBI Discrepancy Report (*.dr): the summary line GAPS: # sequences contain gaps means # sequences contain at least one gap (it’s counting sequences-with-gaps, not the total gap events)" 
+	* Code to confirm this: 
+```
+# Count number of gap runs (total gaps) in a FASTA (counts consecutive N or n runs across all sequences)
+grep -oP '[Nn]+' file*.fsa | wc -l
+
+# Count how many seqeunces contain at least one N or n
+ awk '
+/^>/ {
+    if (seq_has_N) { count++; seq_has_N=0 }
+    next
+}
+/^[^>]/ {
+    if ($0 ~ /[Nn]/) seq_has_N=1
+}
+END {
+    if (seq_has_N) count++
+    print count
+}' file*.fsa 
+```
+* Additionally confirmed that the contig level file did not have any gaps and there was no N or n (ambigious sequences) in the assembly
+
+
+
+### SUSPECT_PRODUCT_NAMES: 2524 product_names contain suspect phrases or characters  
+* Expecting to have some naming convention errors. (Will need to change and correct)  
+
+### FATAL: CONTAINED_CDS: 7308 coding regions are completely contained in another coding region.
+* Need to check if this is biologically accurate. (Used Braker pipeline so likely not error introduced by me)  
+
