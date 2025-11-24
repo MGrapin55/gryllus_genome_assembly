@@ -1,0 +1,58 @@
+==================================================
+file name: Gpenn.chr.final.fasta    
+sequences:          2486
+total length: 2104352614 bp  (2098969229 bp excl N/X-runs)
+GC level:         41.76 %
+bases masked:  861616377 bp ( 40.94 %)
+==================================================
+               number of      length   percentage
+               elements*    occupied  of sequence
+--------------------------------------------------
+Retroelements       885768    346416624 bp   16.46 %
+   SINEs:            12268      2969443 bp    0.14 %
+   Penelope:         50984     13563405 bp    0.64 %
+   LINEs:           468035    211767541 bp   10.06 %
+    CRE/SLACS            0            0 bp    0.00 %
+     L2/CR1/Rex     150785     47749589 bp    2.27 %
+     R1/LOA/Jockey   52575     57915456 bp    2.75 %
+     R2/R4/NeSL      26736     12535601 bp    0.60 %
+     RTE/Bov-B       77732     27367430 bp    1.30 %
+     L1/CIN4         10134      6447972 bp    0.31 %
+   LTR elements:    354481    118116235 bp    5.61 %
+     BEL/Pao         17258      9411886 bp    0.45 %
+     Ty1/Copia       26129     10679655 bp    0.51 %
+     Gypsy/DIRS1    233943     82143682 bp    3.90 %
+       Retroviral     8327      2747722 bp    0.13 %
+
+DNA transposons     1275290    372547048 bp   17.70 %
+   hobo-Activator   527817    148722140 bp    7.07 %
+   Tc1-IS630-Pogo   570071    147758828 bp    7.02 %
+   En-Spm                0            0 bp    0.00 %
+   MULE-MuDR         12525      3187239 bp    0.15 %
+   PiggyBac          30550      8319856 bp    0.40 %
+   Tourist/Harbinger 98606     20038466 bp    0.95 %
+   Other (Mirage,     2947      2176299 bp    0.10 %
+    P-element, Transib)
+
+Rolling-circles      33952     15848145 bp    0.75 %
+
+Unclassified:       259073     48615614 bp    2.31 %
+
+Total interspersed repeats:   767579286 bp   36.48 %
+
+
+Small RNA:               0            0 bp    0.00 %
+
+Satellites:          14101      4835096 bp    0.23 %
+Simple repeats:          0            0 bp    0.00 %
+Low complexity:          0            0 bp    0.00 %
+==================================================
+
+* most repeats fragmented by insertions or deletions
+  have been counted as one element
+                                                      
+
+RepeatMasker version 4.2.1 , sensitive mode                                       
+run with rmblastn version 2.14.1+
+The query was compared to classified sequences in ".../Gpenn_families.prefix.fa.known.unknown.FINAL"
+FamDB: 
