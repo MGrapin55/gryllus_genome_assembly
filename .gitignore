@@ -13,3 +13,5 @@ Gpenn/Braker3/Repeats/Gpenn_numts.bed
 Gpenn/contig/blobtools/Gpenn.p.extracted.fa
 Gpenn/contig/mitogenome_removed/Gpenn.p.clean.mito.fa
 Gpenn/Mitogenome/Gpenn_final_mitogenome.fasta
+Gfirm/Annotation/Gryllus_firmus_blast.gff3
+Gpenn/Annotation/Gryllus_pennsylvanicus_blast.gff3
