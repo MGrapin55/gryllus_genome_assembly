@@ -1,4 +1,4 @@
-Region	Softmask_bp	Softmask_%	Species
+Region	Softmask_bp	Softmask_Percent	Species
 Chromosome 1	135884179	43.600425008287054	Gpenn.chr.final.masked.numt.sorted.renamed
 Chromosome 2	73425918	42.14794033124819	Gpenn.chr.final.masked.numt.sorted.renamed
 Chromosome 3	57090565	39.4854448020731	Gpenn.chr.final.masked.numt.sorted.renamed
