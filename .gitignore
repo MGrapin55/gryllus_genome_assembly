@@ -15,3 +15,11 @@ Gpenn/contig/mitogenome_removed/Gpenn.p.clean.mito.fa
 Gpenn/Mitogenome/Gpenn_final_mitogenome.fasta
 Gfirm/Annotation/Gryllus_firmus_blast.gff3
 Gpenn/Annotation/Gryllus_pennsylvanicus_blast.gff3
+Paper/Repeat_Features/Gfirm.clean.out
+Paper/Repeat_Features/.Rhistory
+Paper/Repeat_Features/Gpenn.clean.out
+Paper/Repeat_Features/Gfirm.chr.final.fasta.out
+Paper/Repeat_Features/Gpenn.chr.final.fasta.out
+Paper/Repeat_Features/Gfirm.asm.key.tsv
+Paper/Repeat_Features/Gpenn.asm.key.tsv
+Paper/Percentage_Softmasked/.Rhistory
