@@ -2,11 +2,20 @@
 # Author: Michael Grapin -- Moore Lab Research Technician 
 
 library(tidyverse)
+library(pheatmap)
+library(ggplot2)
+library(colorspace)
+
+
+## Colors 
+n <- 90
+pal <- qualitative_hcl(n, palette = "Dark 3")
+
 ######################################################
 ##                    Analysis                      ##
 ######################################################
 
-# Prepocessing the data 
+# Prepocessing the data (To remove the irregular stars in the last column)
 # Bash command 
 #awk '{
 #   star="FALSE";             # default False
@@ -59,7 +68,7 @@ Gpenn_rm <- Gpenn_rm %>%
   )
 
 # Group by scaffold and repeat family
-summary_df <- Gpenn_rm %>%
+Gpenn_summary <- Gpenn_rm %>%
   group_by(scaffold_group, repeat_classfam) %>%
   summarise(
     n_repeats = n()
@@ -70,12 +79,12 @@ summary_df <- Gpenn_rm %>%
 scaffold_levels <- c(str_c("Super-Scaffold_", 1:15), "Unplaced")
 
 # Convert scaffold_group to factor with these levels
-summary_df <- summary_df %>%
+Gpenn_summary <- Gpenn_summary %>%
   mutate(
     scaffold_group = factor(scaffold_group, levels = scaffold_levels)
   )
 # Compute total per scaffold
-summary_df <- summary_df %>%
+Gpenn_summary <- Gpenn_summary %>%
   group_by(scaffold_group) %>%
   mutate(
     total_scaffold = sum(n_repeats),       # total repeats per scaffold
@@ -84,8 +93,23 @@ summary_df <- summary_df %>%
   ungroup()             
 
 # Make Plot of repeat features per chromosome
-# Stacked barplot
-ggplot(summary_df, aes(x = scaffold_group, y = percent, fill = repeat_classfam)) +
+# Stacked barplot (Percentage)
+ggplot(Gpenn_summary, aes(x = scaffold_group, y = percent, fill = repeat_classfam)) +
+  geom_bar(stat = "identity", color = "black") +   # add black border
+  theme_minimal() +
+  labs(
+    x = "Chromosomes",
+    y = "Percent of Repeats",
+    fill = "Repeat Classification",
+    title = "Repeat Classes per Scaffold"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_manual(values = pal)
+
+# Stacked barpot (Counts)
+ggplot(Gpenn_summary, aes(x = scaffold_group, y = n_repeats, fill = repeat_classfam)) +
   geom_bar(stat = "identity", color = "black") +   # add black border
   theme_minimal() +
   labs(
@@ -98,20 +122,8 @@ ggplot(summary_df, aes(x = scaffold_group, y = percent, fill = repeat_classfam))
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggplot(summary_df, aes(x = scaffold_group, y = n_repeats, fill = repeat_classfam)) +
-  geom_bar(stat = "identity", color = "black") +   # add black border
-  theme_minimal() +
-  labs(
-    x = "Chromosomes",
-    y = "Percent of Repeats",
-    fill = "Repeat Classification",
-    title = "Repeat Classes per Scaffold"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-ggplot(summary_df, aes(x = scaffold_group, y = total_scaffold * percent, fill = repeat_classfam)) +
+# Stack barplot )proportional stacked barplot scaled to absolute counts)
+ggplot(Gpenn_summary, aes(x = scaffold_group, y = total_scaffold * percent, fill = repeat_classfam)) +
   geom_bar(stat = "identity", color = "black") +
   theme_minimal() +
   labs(
@@ -169,7 +181,7 @@ Gfirm_rm <- Gfirm_rm %>%
   )
 
 # Group by scaffold and repeat family
-summary_df2 <- Gfirm_rm %>%
+Gfirm_summary <- Gfirm_rm %>%
   group_by(scaffold_group, repeat_classfam) %>%
   summarise(
     n_repeats = n()
@@ -180,12 +192,12 @@ summary_df2 <- Gfirm_rm %>%
 scaffold_levels <- c(str_c("Super-Scaffold_", 1:15), "Unplaced")
 
 # Convert scaffold_group to factor with these levels
-summary_df2 <- summary_df2 %>%
+Gfirm_summary <- Gfirm_summary %>%
   mutate(
     scaffold_group = factor(scaffold_group, levels = scaffold_levels)
   )
 # Compute total per scaffold
-summary_df2 <- summary_df2 %>%
+Gfirm_summary <- Gfirm_summary %>%
   group_by(scaffold_group) %>%
   mutate(
     total_scaffold = sum(n_repeats),       # total repeats per scaffold
@@ -194,8 +206,8 @@ summary_df2 <- summary_df2 %>%
   ungroup()             
 
 # Make Plot of repeat features per chromosome
-# Stacked barplot
-ggplot(summary_df2, aes(x = scaffold_group, y = percent, fill = repeat_classfam)) +
+# Stacked barplot (percent)
+ggplot(Gfirm_summary, aes(x = scaffold_group, y = percent, fill = repeat_classfam)) +
   geom_bar(stat = "identity", color = "black") +   # add black border
   theme_minimal() +
   labs(
@@ -208,7 +220,8 @@ ggplot(summary_df2, aes(x = scaffold_group, y = percent, fill = repeat_classfam)
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggplot(summary_df2, aes(x = scaffold_group, y = n_repeats, fill = repeat_classfam)) +
+# Stacked barplot (counts)
+ggplot(Gfirm_summary, aes(x = scaffold_group, y = n_repeats, fill = repeat_classfam)) +
   geom_bar(stat = "identity", color = "black") +   # add black border
   theme_minimal() +
   labs(
@@ -221,7 +234,8 @@ ggplot(summary_df2, aes(x = scaffold_group, y = n_repeats, fill = repeat_classfa
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggplot(summary_df, aes(x = scaffold_group, y = total_scaffold * percent, fill = repeat_classfam)) +
+# Stack barplot )proportional stacked barplot scaled to absolute counts)
+ggplot(Gfirm_summary, aes(x = scaffold_group, y = total_scaffold * percent, fill = repeat_classfam)) +
   geom_bar(stat = "identity", color = "black") +
   theme_minimal() +
   labs(
@@ -238,11 +252,12 @@ ggplot(summary_df, aes(x = scaffold_group, y = total_scaffold * percent, fill = 
 ################################################
 
 # join by repeat_classfam 
-summary_df$species <- "Gpenn"
-summary_df2$species <- "Gfirm"
+Gpenn_summary$species <- "Gpenn"
+Gfirm_summary$species <- "Gfirm"
 
-species_joined <- bind_rows(summary_df, summary_df2)
+species_joined <- bind_rows(Gpenn_summary, Gfirm_summary)
 
+# Pivot to wide format
 diff_df <- species_joined %>%
   select(species, scaffold_group, repeat_classfam, n_repeats, percent) %>%
   pivot_wider(
@@ -254,10 +269,7 @@ diff_df <- species_joined %>%
     diff_percent = percent_Gpenn   - percent_Gfirm
   )
 
-library(dplyr)
-library(tidyr)
-library(pheatmap)
-
+# Make a heatmap 
 # -------------------------------
 # 1. Prepare heatmap matrix
 # -------------------------------
@@ -323,6 +335,9 @@ dev.off()
 
 
 
+
+
+
 ## Make a histogram 
 Gpenn_rm <- Gpenn_rm %>% mutate(
   length = abs(query_end - query_start)
@@ -340,7 +355,7 @@ Gfirm_rm$species <- "Gfirm"
 combined <- bind_rows(Gpenn_rm, Gfirm_rm)
 
 
-library(ggplot2)
+
 
 ggplot(Gpenn_rm, aes(x = log10(length))) +
   geom_histogram(
@@ -384,3 +399,13 @@ ggplot(combined %>% filter(length > 0), aes(x = length, color = species, fill = 
   )
 
 
+ggplot(combined,aes(x = repeat_classfam, color = species, fill = species)) +
+  geom_density(alpha = 0.4) +     # alpha controls transparency
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Repeat Length",
+    y = "Density",
+    title = "Kernel Density of Repeat Lengths by Species",
+    color = "Species",
+    fill = "Species"
+  )
