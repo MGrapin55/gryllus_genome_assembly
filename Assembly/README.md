@@ -197,7 +197,7 @@ My summary, we likely have some haplotigs that slipped through but at this momen
 
 ## Chromosome level scaffold naming convention   
 
-In both the cases of *G.bimaculatus* and *G.assimilis* they named there chromosomes convention in order of size (largest to smallest). Currenly, our assemblies are not at chromosomal level scaffolds for all chromosomes. (ie. there are still some unplaced scaffolds that are larger.)
+In both the cases of *G.bimaculatus* and *G.assimilis* they named there chromosomes convention in order of size (largest to smallest). Currenly, our assemblies are not at chromosomal level scaffolds for all chromosomes. (ie. there are still some unplaced scaffolds.)
 
 | Case                    | Strategy                | Example                |
 | ----------------------- | ----------------------- | ---------------------- |
@@ -207,6 +207,10 @@ In both the cases of *G.bimaculatus* and *G.assimilis* they named there chromoso
 | Mitochondrial / plastid | Use `chrM` / `chrC`     | `chrM`, `chrC`         |
 | Multiple assemblies     | Add prefix or version   | `GaChr1_v1`            |
 
+
+We are naming our chromosome covention off of the *G.assimilis* assembly naming convention. Chromosmome names will be comparable to *G.assimilis*, *G.pennsylvanicus*, and *G.firmus*, but *G.bimaculatus* is just shorted by order.
+
+>Likely the same chromosome but not 100% sure without checking the content.
 
 Assembly:
 1. HifiAdapterFilter 
