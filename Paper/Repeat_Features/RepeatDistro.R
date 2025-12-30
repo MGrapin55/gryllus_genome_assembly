@@ -251,40 +251,36 @@ ggplot(Gfirm_summary, aes(x = scaffold_group, y = total_scaffold * percent, fill
 ##            Combined Analysis               ##
 ################################################
 
-# join by repeat_classfam 
-Gpenn_summary$species <- "Gpenn"
-Gfirm_summary$species <- "Gfirm"
-
-species_joined <- bind_rows(Gpenn_summary, Gfirm_summary)
+# Summarize by repeat_classfam
+summary_feature <- combined %>%
+  count(species, group, repeat_classfam, name = "n")
 
 # Pivot to wide format
-diff_df <- species_joined %>%
-  select(species, scaffold_group, repeat_classfam, n_repeats, percent) %>%
+diff_df <- summary_feature %>%
+  select(species, group, repeat_classfam, n) %>%
   pivot_wider(
     names_from = species,
-    values_from = c(n_repeats, percent)
+    values_from = c(n)
   ) %>%
   mutate(
-    diff_n       = n_repeats_Gpenn - n_repeats_Gfirm,
-    diff_percent = percent_Gpenn   - percent_Gfirm
-  )
+    diff_n       = n_Gpenn - n_Gfirm)
 
 # Make a heatmap 
 # -------------------------------
 # 1. Prepare heatmap matrix
 # -------------------------------
 heatmap_mat <- diff_df %>%
-  select(scaffold_group, repeat_classfam, diff_percent) %>%
-  drop_na(diff_percent) %>%        # remove rows where diff_percent is NA
+  select(scaffold_group, repeat_classfam, diff_n) %>%
+  drop_na(diff_n) %>%        # remove rows where diff_percent is NA
   pivot_wider(
-    names_from = scaffold_group,
-    values_from = diff_percent,
+    names_from = group,
+    values_from = diff_n,
     values_fill = 0                # optional: fill remaining missing values with 0
   ) %>%
   column_to_rownames("repeat_classfam") %>%
   as.matrix()
 
-scaffold_levels <- c(str_c("Super-Scaffold_", 1:15), "Unplaced")
+scaffold_levels <- c(str_c("chr_X", "chr_", 1:14), "Unplaced")
 heatmap_mat <- heatmap_mat[,scaffold_levels]
 
 # -------------------------------
@@ -307,7 +303,7 @@ my_breaks <- seq(global_min, global_max, length.out = n_colors + 1)
 # -------------------------------
 # 4. Plot heatmaps page by page
 # -------------------------------
-pdf("heatmap_pages_fixed_scale.pdf", width = 12, height = 8)
+pdf("heatmap_Repeat_counts.pdf", width = 12, height = 8)
 
 for (i in 1:pages) {
   # Rows for this page
