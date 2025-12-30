@@ -304,4 +304,66 @@ ggplot(test, aes(x = rel_pos, y = species)) +
 
 
 
+set.seed(123)
+
+example_df <- tibble(
+  species = rep(c("G. firmus", "G. pennsylvanicus"), each = 500),
+  repeat_center = c(
+    rnorm(500, mean = 5e6, sd = 5e5),   # same distribution
+    rnorm(500, mean = 5e6, sd = 5e5)
+  )
+)
+
+head(example_df)
+
+ggplot(
+  example_df,
+  aes(
+    x = repeat_center,
+    y = species,
+    fill = species,
+    height = after_stat(density)
+  )
+) +
+  geom_density_ridges(
+    stat = "density",
+    scale = 5,
+    alpha = 0.7,
+    linewidth = 0.8
+  ) +
+  scale_x_continuous(
+    labels = scales::comma,
+    name = "Genomic position (bp)",
+    expand = c(0, 0)
+  ) +
+  scale_fill_manual(
+    values = c("#AFBC88", "#618B4A"),
+    labels = c(
+      expression(italic("G. firmus")),
+      expression(italic("G. pennsylvanicus"))
+    )
+  ) +
+  theme_ridges(grid = FALSE, center_axis_labels = TRUE) +
+  theme(legend.position = "none")
+
+
+ggplot(example_df, aes(x = repeat_center, color = species, fill = species)) +
+  geom_density(alpha = 0.4, linewidth = 1, ) +
+  scale_x_continuous(
+    labels = scales::comma,
+    name = "Genomic position (bp)",
+    expand = c(0, 0)
+  ) +
+  scale_fill_manual(
+    values = c("#AFBC88", "#618B4A"),
+    labels = c(
+      expression(italic("G. firmus")),
+      expression(italic("G. pennsylvanicus"))
+    )
+  ) +
+  scale_color_manual(
+    values = c("#AFBC88", "#618B4A")
+  ) +
+  theme_classic()
+
 

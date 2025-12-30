@@ -10,17 +10,15 @@ setwd("~/Downloads/MOORE_LAB_UNL/GRYLLUS_GENOME_ASSEMBLY/GIT_REPO/gryllus_genome
 source("functions.R")
 
 # Set file to work on
-file_path = "Gpenn.clean.out"
-species <- "Gpenn"
+file_path = "Gfirm.clean.out"
+species <- "Gfirm"
 ############################################################################################
 
 # Read in the RM data
 data <- read_rm_out(file_path)
 
-
 # Create a Granges object 
 gr <- granges_object(data)
-
 
 # -----------------------------
 # Fragment overlap stats
@@ -30,7 +28,6 @@ frag_class_df <- fragment_overlap_stats(gr, group_cols = c("class"))
 
 # For family
 frag_family_df <- fragment_overlap_stats(gr, group_cols = c("family"))
-
 
 # -----------------------------
 # NR basepair overlap stats
@@ -42,23 +39,6 @@ nr_class_df <- rename(nr_class_df, "overlap_fraction" = "overlap_fraction_class"
 # For family
 nr_family_df <- compute_nr_by_group(gr, group_cols = c("family"))
 nr_family_df <- rename(nr_family_df, "overlap_fraction" = "overlap_fraction_family")
-
-
-# Join all this data together
-class_df <- frag_class_df %>%
-  left_join(
-    nr_class_df,
-    by = c("seq_id", "class")
-  )
-
-family_df <- frag_family_df %>%
-  left_join(
-    nr_family_df,
-    by = c("seq_id", "family")
-  )
-
-order <- c("seq_id","class", "family", "raw_count", "nr_count", "raw_length", "nr_length", "overlap_fraction")
-
 
 # -----------------------------
 # 1. Split class / family in RM data
@@ -96,7 +76,7 @@ master_df <- data %>%
   left_join(family_df, by = c("seq_id", "family"))
 
 # Write to a csv
-filename <- paste(species, "RM_Summary_Master.csv")
-write_csv(master_df, filename = filename)
+filename <- paste(species, "_RM_Summary_Master.csv")
+write_csv(master_df, filename)
 
 
