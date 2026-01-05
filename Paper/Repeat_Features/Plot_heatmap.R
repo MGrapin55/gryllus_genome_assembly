@@ -15,7 +15,7 @@ f$species <- "Gfirm"
 combined <- bind_rows(p, f)
 
 # Set factor levels 
-summary_feature <- summary_feature %>%
+combined <- combined %>%
   mutate(species = factor(species, levels = c("Gpenn", "Gfirm")))
 
 # -------------------------------
