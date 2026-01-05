@@ -473,7 +473,71 @@ dev.off()
 ###                                 Plotting By Percentages of each repeat type                          ###
 ############################################################################################################
 
+# ---------------------------------------------------------
+# 1. Data Preparation
+# ---------------------------------------------------------
+# Reading in the data 
+p <- read_rm_out("Gpenn.clean.out")
+f <- read_rm_out("Gfirm.clean.out")
 
+p$species <- "Gpenn"
+f$species <- "Gfirm"
+
+combined <- bind_rows(p, f) %>%
+  mutate(species = factor(species, levels = c("Gpenn", "Gfirm")))
+
+# ---------------------------------------------------------
+# 2. Calculate Denominators (TOTAL counts per species)
+# ---------------------------------------------------------
+# This is the "Overall" part. We calculate the total repeats 
+# for the entire species *once* here, ignoring chromosomes.
+species_totals <- combined %>%
+  count(species, name = "total_species_n")
+
+# ---------------------------------------------------------
+# 3. Generate "TotalPercentageRepeat_bar.pdf"
+# ---------------------------------------------------------
+# Summarize by chromosome (group) first
+summary <- combined %>%
+  group_by(species, class_family) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  # Join with the species totals to calculate percentage
+  left_join(species_totals, by = "species") %>%
+  mutate(pct = (n / total_species_n) * 100)
+
+pdf("TotalPercentageRepeat_bar_noChr.pdf", width = 8, height = 6)
+
+class_family <- unique(summary$class_family)
+
+for (c in class_family) {
+  
+  df <- summary %>%
+    filter(class_family == c)
+  
+  if (nrow(df) == 0) next
+  
+  p <- ggplot(df, aes(x = class_family, y = pct, fill = species)) +
+  geom_col(
+    position = position_dodge(width = 0.9),
+    color = "black",
+    linewidth = 0.4
+  ) +
+  scale_fill_manual(values = c("#618B4A", "#AFBC88")) +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  labs(
+    y = "Percent of Total Genome Repeats (%)",
+    x = "Repeat Feature",
+    title = "Total Repeat Distribution (Overall %)"
+  ) 
+  
+  print(p)
+}
+
+dev.off()
 
 
 
