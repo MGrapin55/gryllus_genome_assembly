@@ -10,6 +10,29 @@ The goal of the bar plot is to visualize some magnitude difference between our c
 
 I feel adamant to investigate the different repeat features at varying scales. Example is looking at the classification at the class and class/family level. Additionally, shifts in magnitude appear when looking separately across each chromosome rather then just the collapsed amount. 
 
+### Percentages
+**Different Ways to Plot Percentages:**
+* To calculate the percentage relative to that specific chromosome (i.e., of all repeats on Chr1, what % is Family X?)  
+
+$$\text{Percentage} = \frac{\text{Count of specific repeat}}{\text{Total repeats on each chromosome (species, group)}} \times 100$$
+
+<br><br><br>
+
+* How the repetitive content is distributed across the chromosomes (e.g., "Chromosome 1 holds 12% of the species' total repeats")  
+
+$$\text{Percentage} = \frac{\text{Count on Chromosome}}{\text{TOTAL Repeats in the Entire Genome}} \times 100$$
+
+<br><br><br>
+
+*If you didn't want to look at specific chromosomes but just percentages overall...*
+
+* What percentage is this repeat type overall (Repeat A is 12% and Repeat B is 9%)
+
+$$\text{Percentage} = \frac{\text{Count of Repeat Type}}{\text{TOTAL Repeats Overall}} \times 100$$
+
+<br><br><br>
+
+
 ## Density Plots 
 The goal of density plots to to show the pattern of the distribution. We achieve this by giving a continuous numeric variable (i.e genomic position) to the kernel density estimate function which computes density values that can be plotted. The resulting distribution shows peaks where input values are frequent.  
 
