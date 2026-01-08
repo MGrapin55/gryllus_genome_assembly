@@ -228,3 +228,47 @@ If using Approach 2:
 >Approach 1 = Evolutionary trajectory.
 >
 >Approach 2 = Spatial abundance.
+
+
+# Key Points about Sliding window (line plot) vs Ridgeline plot
+When you ask:
+
+“Where along the genome are repeats located (overall)?”
+“Frequency” means:
+
+* counts per bp
+* bp of repeats per window
+* proportion of genome masked
+
+These are spatial intensities, not distributions.
+They answer:
+
+“How much repeat sequence is at this genomic location?”
+
+---
+
+### You explicitly want relative shape only
+Example question:
+
+“How does the shape of repeat localization differ across chromosomes, ignoring total amount?”
+
+Then:
+* Normalize each chromosome
+* State explicitly that magnitude is ignored
+* This is rare in genomics.
+
+---
+
+### You lose genomic distance meaning
+Ridgelines are smooth distributions:
+
+* KDE spreads mass across x
+* Peaks do not correspond to discrete windows
+* Boundaries are blurred by bandwidth
+* That’s acceptable for divergence space
+
+**Not acceptable for genomic coordinates**
+
+
+# Breaks in Synteny Potentially Due to Repeat Features
+**Idea:** Look for where there is breaks in syteny and then investigate those regions for variation in repeat features. Additionally, we then can look at the age of these elements and see if they are new or recent. 
