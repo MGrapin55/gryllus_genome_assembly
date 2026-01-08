@@ -21,14 +21,14 @@ rm_df <- bind_rows(p, f)
 # Set factor levels and get new columns
 rm_df <- rm_df %>%
   mutate(species = factor(species, levels = c("Gpenn", "Gfirm")),
-         midpoint = (begin + end) / 2,
+         midpoint = abs((begin + end) / 2),
          midpoint_mb = midpoint / 1e6)
 ############################################################
 ## Shared parameters
 ############################################################
 
 window_size <- 1e6  # 1 Mb windows
-chr <- c("X_chr", str_c("chr_", 1:14), "Unplaced")
+chr <- c("X_chr", str_c("chr_", 1:14))
 
 # Plot colors 
 colors <- c("Gpenn" = "#618B4A", "Gfirm" = "#AFBC88")
@@ -89,40 +89,50 @@ ggplot(df_div_traj_all, aes(pos_mb, median_div, color = species)) +
   ) +
   scale_color_manual(values = colors)
 
+# This plot shows the divergence trajectories along each chromosome
 
+##==================================================================================##
+# Now this will separate them by class_family 
+values <- unique(rm_df$class_family)
 
-############################################################
-## 3️⃣ QUESTION:
-## "Where along the chromosome do repeats accumulate
-##  in each species?"
-## (Element density per Mb)
-############################################################
-# Removed the unplaced scaffolds because they were messing with the scales. This is because the group 
-# "unplaced" is a combination of many scaffolds. This analysis treats each as a one sequences so having 
-# all the combined sequnces made it have many more elements per region. 
-chr <- c("X_chr", str_c("chr_", 1:14))
+# 2. Open the PDF device
+pdf("Repeat_MedianDivergence_by_Family.pdf", width = 12, height = 8)
 
-df_elem_density <- rm_df %>% 
-  filter(group %in% chr) %>%
-  mutate(window = floor(midpoint / window_size)) %>%
-  group_by(species, window, group) %>%
-  summarize(
-    pos_mb = mean(midpoint_mb),
-    density_per_mb = n() / (window_size / 1e6),
-    .groups = "drop"
-  )
+# 3. Loop through each family
+for (fam in values) {
+  
+  # Step A: Filter and calculate density FOR THIS SPECIFIC FAMILY
+  plot_data <- rm_df %>%
+    filter(class_family == fam, group %in% chr) %>%
+    mutate(window = floor(midpoint / window_size)) %>%
+    group_by(species, window, group) %>%
+    summarize(
+      pos_mb = mean(midpoint_mb),
+      median_div = median(perc_div),
+      .groups = "drop"
+    )
+  
+  # Step B: Check if there is data to plot (prevents empty page errors)
+  if (nrow(plot_data) == 0) next
+  
+  # Step C: Create the plot using the newly calculated plot_data
+  p <- ggplot(plot_data, aes(pos_mb, median_div, color = species)) +
+    geom_line(linewidth = 1) +
+    facet_wrap(~ group, scales = "free_x") +
+    theme_minimal(base_size = 14) +
+    labs(
+      x = "Genomic position (Mb)",
+      y = "Median percent divergence",
+      title = paste("Comparative divergence trajectories across chromosomes:", fam)
+    ) +
+    scale_color_manual(values = colors)
+  
+  # 4. Explicitly print
+  print(p)
+}
 
-ggplot(df_elem_density, aes(pos_mb, density_per_mb, color = species)) +
-  geom_line(linewidth = 1) +
-  facet_wrap(~ group, scales = "free_x") +
-  theme_minimal(base_size = 14) +
-  labs(
-    x = "Genomic position (Mb)",
-    y = "Element density (per Mb)",
-    title = "Repeat density trajectories by species"
-  ) +
-  scale_color_manual(values = colors)
-
+# 5. Close device
+dev.off()
 
 ############################################################
 ## 4️⃣ QUESTION:
@@ -252,5 +262,18 @@ ggplot(
     title = "Chromosome-wide divergence distributions (species overlaid)"
   )
 
+#####################################################
 
 
+ggplot(rm_df, aes(midpoint_mb, perc_div)) +
+  geom_bin2d(bins = 75) +
+  scale_fill_viridis_c() +
+  facet_wrap(~ interaction(species, group)) +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Genomic position (Mb)",
+    y = "Percent divergence",
+    fill = "Density",
+    title = "Joint density of divergence and position"
+  )
+# Need to revise this plot to get meaningful vizualizations.But it could be useful. 
