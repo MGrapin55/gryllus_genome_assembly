@@ -710,3 +710,184 @@ ggplot(df_elem_density, aes(pos_mb, density_per_mb, color = species)) +
     title = "Repeat density trajectories by species"
   ) +
   scale_color_manual(values = colors)
+
+
+
+
+
+
+###############################################################################
+##      Where do the recent elements fall across the each genome? 
+###############################################################################
+
+
+
+
+###############################################################################
+##      Where do the recent elements fall across the each chromosome? 
+###############################################################################
+# N repeats per Mb
+# I think this this is a little more intutitive to understand. 
+df_elem_density <- rm_df %>% 
+  filter(group %in% chr & perc_div <= 5) %>%
+  mutate(window = floor(midpoint / window_size)) %>%
+  group_by(species, window, group) %>%
+  summarize(
+    pos_mb = mean(midpoint_mb),
+    density_per_mb = n() / (window_size / 1e6),
+    .groups = "drop"
+  )
+
+ggplot(df_elem_density, aes(pos_mb, density_per_mb, color = species)) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~ group, scales = "free_x") +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Genomic position (Mb)",
+    y = "Element density (per Mb)",
+    title = "Repeat density trajectories by species"
+  ) +
+  scale_color_manual(values = colors)
+## Across all families this tells us which elements are newer (filtered by <= 5% Divergence)
+
+
+# Repeat this will all families subsetted. 
+values <- unique(rm_df$class_family)
+
+# 2. Open the PDF device
+# You can set the width and height in inches
+pdf("Repeat_DensityNperMB_lowDivergence_Family.pdf", width = 10, height = 8)
+
+# 3. Loop through each family
+for (fam in values) {
+  
+  # 1. Filter data for the specific family FIRST
+  family_subset <- rm_df %>% 
+    filter(class_family == fam)
+  
+  # 2. Use THAT subset for the summary calculations
+  plot_data <- family_subset %>% 
+    filter(group %in% chr & perc_div <= 5) %>%
+    mutate(window = floor(midpoint / window_size)) %>%
+    group_by(species, window, group) %>%
+    summarize(
+      pos_mb = mean(midpoint_mb),
+      density_per_mb = n() / (window_size / 1e6),
+      .groups = "drop"
+    )
+  
+  # 3. Skip if no data
+  if (nrow(plot_data) == 0) next
+  
+  # 4. Create the plot
+  p <- ggplot(plot_data, aes(pos_mb, density_per_mb, color = species)) +
+    geom_line(linewidth = 1) +
+    facet_wrap(~ group, scales = "free_x") +
+    theme_minimal(base_size = 14) +
+    labs(
+      x = "Genomic position (Mb)",
+      y = "Element density (per Mb)",
+      title = paste("Repeat density trajectories by species:", fam) # This will now be accurate
+    ) +
+    scale_color_manual(values = colors)
+  
+  print(p)
+}
+
+# 5. Close the PDF device
+dev.off()
+
+
+
+
+
+
+
+
+pdf("Repeat_Distributions_LessThan5_by_Family.pdf", width = 10, height = 8)
+
+# 3. Loop through each family
+for (fam in values) {
+  
+  # Filter data for the specific family
+  plot_data <- subset(rm_df, class_family == fam & perc_div <= 5)
+  
+  # Create the plot
+  p <- ggplot(
+    plot_data, 
+    aes(
+      x = midpoint_mb,        
+      y = group,      
+      fill = species
+    )
+  ) +
+    geom_density_ridges(
+      scale = 1,                 
+      alpha = 0.5,
+      rel_min_height = 0.01      
+    ) +
+    theme_minimal(base_size = 14) +
+    labs(
+      x = "Genomic Position (Mb)",
+      y = "Chromosome",
+      # Dynamically update the title for each page
+      title = paste("Distribution for family:", fam)
+    ) + 
+    scale_fill_manual(values = colors)
+  
+  # 4. Explicitly print the plot (required inside loops)
+  print(p)
+}
+
+# 5. Close the PDF device
+dev.off()
+# Good vizual but not useful for every class_family because after filtering there was not enough data left 
+# to compute an accurate frequency. 
+
+
+
+ggplot(df_elem_density,
+       aes(x = species, y = density_per_mb , fill = species)) +
+  geom_boxplot(outlier.size = 0.4) +
+  facet_wrap(~ group, scales = "free_y") +
+  labs(y = "N elements Per Mb") +
+  scale_fill_manual(values = colors)
+
+
+pdf("Repeat_DistributionsNrepeatesPerMB_BoxlplotsBinned_by_Family.pdf", width = 12, height = 8)
+
+# 3. Loop through each family
+for (fam in values) {
+  
+  # 1. Filter data for the specific family FIRST
+  family_subset <- rm_df %>% 
+    filter(class_family == fam)
+  
+  # 2. Use THAT subset for the summary calculations
+  plot_data <- family_subset %>% 
+    filter(group %in% chr) %>%
+    mutate(window = floor(midpoint / window_size)) %>%
+    group_by(species, window, group) %>%
+    summarize(
+      pos_mb = mean(midpoint_mb),
+      density_per_mb = n() / (window_size / 1e6),
+      .groups = "drop"
+    )
+  
+  # 3. Skip if no data
+  if (nrow(plot_data) == 0) next
+  
+  # Step C: Create the plot using the newly calculated plot_data
+  p <- ggplot(plot_data,
+              aes(x = species, y = density_per_mb , fill = species)) +
+    geom_boxplot(outlier.size = 0.4) +
+    facet_wrap(~ group, scales = "free_y") +
+    labs(y = "N elements Per Mb", 
+         title = paste("Distributions of Repeats Across Chromosomee:", fam)) +
+    scale_fill_manual(values = colors)
+  # 4. Explicitly print
+  print(p)
+}
+
+# 5. Close device
+dev.off()
