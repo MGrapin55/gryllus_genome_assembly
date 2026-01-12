@@ -3,6 +3,7 @@
 ##                                Analysis for Divergence of repeat elements
 ##
 ################################################################################################################
+setwd("~/Downloads/MOORE_LAB_UNL/GRYLLUS_GENOME_ASSEMBLY/GIT_REPO/gryllus_genome_assembly/Paper/Repeat_Features")
 
 # Load some handy functions in
 source(file = "functions.R")
@@ -277,3 +278,5 @@ ggplot(rm_df, aes(midpoint_mb, perc_div)) +
     title = "Joint density of divergence and position"
   )
 # Need to revise this plot to get meaningful vizualizations.But it could be useful. 
+
+
