@@ -1,6 +1,46 @@
 # Markdown File Containing Initial Results and Observations About Repeat Features
 
 
+# Genome Level 
+**High Level Takeaway:** Being sister species these two repeat landscapes are pretty similar. This makes sense since they have been evolving for the same amount of time. 
+
+**Localization** 
+
+**Divergence** 
+
+**Localization + Divergence** 
+
+<br>
+
+# Chromosome Level
+
+**High Level Takeaway:** Chromosomes appear to be pretty similar, however you can tell there are small parts that are different.
+
+**Localization** 
+
+**Divergence** 
+
+**Localization + Divergence** 
+
+**Ideas:**
+* Look for where there is breaks in synteny and then investigate those regions for variation in repeat features. Additionally, we then can look at the age of these elements and see if they are new or recent. 
+
+<br><br>
+
+# Chromosome -- Class_Family Level
+
+**High Level Takeaway:** 
+
+**Localization** 
+
+**Divergence** 
+
+**Localization + Divergence** 
+
+
+<br><br><br><br>
+
+---
 
 # Types of Plots We Are Making 
 
