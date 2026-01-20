@@ -8,9 +8,10 @@ library(stringr)
 
 # Global Parameters
 wkdir = "~/Downloads/MOORE_LAB_UNL/GRYLLUS_GENOME_ASSEMBLY/GIT_REPO/gryllus_genome_assembly/Paper/Validate_X"
-result_dir = "./results"
-coverage_file = "GFIRM_LZ.regions.bed"
-key_file = "../Repeat_Features/Gfirm.asm.key.tsv"
+result_dir = "results"
+file_name = "Gpenn_XchrValidation"
+coverage_file = "GPENN_ETH.regions.bed"
+key_file = "../Repeat_Features/Gpenn.asm.key.tsv"
 
 setwd(wkdir)
 
@@ -70,14 +71,18 @@ plot <- ggplot(cov_filtered, aes(x = V1, y = V4)) +
     legend.position = "none"  # Hide legend
   )
 
+print(plot)
+
 # Make results directory
 dir.create(result_dir)
+# create full path
+file_path <- file.path(result_dir, file_name)
 
 # Save the plot in SVG format
-ggsave(result_dir, plot = plot, device = "svg")
+ggsave(filename = paste0(file_path,".svg"), plot = plot, device = "svg", height = 8.27 , width = 11.69)
 
 # Save the plot in PNG format
-ggsave(result_dir, plot = plot, device = "png")
+ggsave(filename = paste0(file_path,".png"), plot = plot, device = "png",  height = 8.27 , width = 11.69)
 
 # Save the plot in PDF format
-ggsave(result_dir, plot = plot, device = "pdf")
+ggsave(filename = paste0(file_path,".pdf"), plot = plot, device = "pdf", height = 8.27 , width = 11.69)
