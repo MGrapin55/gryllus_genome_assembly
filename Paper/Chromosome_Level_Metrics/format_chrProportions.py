@@ -10,7 +10,7 @@ DEFAULT_FASTAS = [
     "/lustre/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/Gpenn/Gpenn_Production/ANNOTATION/RepeatMM/NUMTs/Gpenn.chr.final.fasta.masked.numt",
     "/lustre/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/Gfirm/Gfirm_Production/ANNOTATION/RepeatMM/NUMTs/Gfirm.chr.final.fasta.masked.numt",
     "/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/full/GCA_046254815.1_ASM4625481v1_genomic.fna",
-    "/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/full/GCA_965638035.1_iqGryBima1.hap1.1_genomic.fna.NoMito",
+    "/lustre/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/full/Gbimac2.2_Xfirst_GCA_054131365.1_ASM5413136v1_genomic.fna",
 ]
 
 def format_number(n):

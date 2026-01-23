@@ -14,14 +14,14 @@ DEFAULT_FASTAS = [
     "/lustre/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/Gpenn/Gpenn_Production/ANNOTATION/RepeatMM/NUMTs/Gpenn.chr.final.fasta.masked.numt",
     "/lustre/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/Gfirm/Gfirm_Production/ANNOTATION/RepeatMM/NUMTs/Gfirm.chr.final.fasta.masked.numt",
     "/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/full/GCA_046254815.1_ASM4625481v1_genomic.fna",
-    "/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/full/GCA_965638035.1_iqGryBima1.hap1.1_genomic.fna.NoMito",
+    "/lustre/work/moorelab/mgrapin2/GRYLLUS_ASSEMBLIES/ref/full/Gbimac2.2_Xfirst_GCA_054131365.1_ASM5413136v1_genomic.fna",
 ]
 
 SPECIES_NAMES = {
     "Gpenn.chr.final.fasta.masked.numt": "G.pennsylvanicus",
     "Gfirm.chr.final.fasta.masked.numt": "G.firmus",
     "GCA_046254815.1_ASM4625481v1_genomic.fna": "G.assimilis",
-    "GCA_965638035.1_iqGryBima1.hap1.1_genomic.fna.NoMito": "G.bimaculatus",
+    "Gbimac2.2_Xfirst_GCA_054131365.1_ASM5413136v1_genomic.fna": "G.bimaculatus",
 }
 
 COLORS = {
@@ -200,6 +200,13 @@ def main(fastas):
     df = pd.DataFrame(plot_rows)
     chrom_order = ["X"] + [str(i) for i in range(1, 15)] + ["Unplaced"]
     df["Region"] = pd.Categorical(df["Region"], categories=chrom_order, ordered=True)
+    
+    # =======================
+    # WRITE TSV  ### NEW ###
+    # =======================
+    out_tsv = "softmasked_metrics_summary.tsv"
+    df.to_csv(out_tsv, sep="\t", index=False)
+    print(f"Wrote summary table to: {out_tsv}")
 
     make_plots(df)
 
