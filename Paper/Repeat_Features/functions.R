@@ -209,5 +209,312 @@ granges_object <- function(rm_df) {
   return(gr)
 }
 ##===============================================================================================##
+#' Speciation Analysis from SNP and RepeatMasker Data
+#'
+#' This function integrates SNP density and RepeatMasker feature density
+#' across fixed genomic windows to identify putative speciation regions.
+#' Genomic windows whose SNP density exceeds a user-defined quantile
+#' (default = 95%) within each chromosome are classified as
+#' \emph{speciation-enriched}.
+#'
+#' The function automatically:
+#' \itemize{
+#'   \item Standardizes chromosome naming conventions
+#'   \item Bins SNPs and repeats into fixed genomic windows
+#'   \item Computes per-window densities
+#'   \item Calculates chromosome-specific quantile cutoffs
+#'   \item Classifies windows as speciation or non-speciation
+#' }
+#'
+#' @param species Character. Species name (e.g. "Gpenn", "Gfirm").
+#' @param window Numeric. Genomic window size (e.g. 1e4, 1e5, 1e6).
+#' @param allele_file Character. Path to SNP/allele TSV file
+#'   with columns: \code{seqid, location}.
+#' @param rm_file Character. Path to RepeatMasker .out file
+#'   parsed using \code{read_rm_out()}.
+#' @param cutoff Numeric. Quantile cutoff for SNP density
+#'   (default = 0.95).
+#'
+#' @return A named list of class \code{"SpeciationAnalysis"} with:
+#' \describe{
+#'   \item{allele_density}{SNP density per genomic window}
+#'   \item{feature_density}{RepeatMasker feature density per window}
+#'   \item{cutoffs}{Chromosome-specific SNP density thresholds}
+#'   \item{rm_df}{Annotated RepeatMasker data}
+#'   \item{snps}{Annotated SNP data}
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' analysis <- Speciation_Analysis(
+#'   species = "Gpenn",
+#'   window = 1e6,
+#'   allele_file = "alleles.tsv",
+#'   rm_file = "repeatmasker.out"
+#' )
+#' }
+
+Speciation_Analysis <- function(
+    species,
+    window = 1e6,
+    allele_file,
+    rm_file,
+    cutoff = 0.95
+) {
+  
+  # ------------------------------
+  # Input validation
+  # ------------------------------
+  if (!is.character(species) || length(species) != 1) {
+    stop("`species` must be a single character string (e.g. 'Gpenn' or 'Gfirm').")
+  }
+  
+  if (!is.numeric(window) || window <= 0) {
+    stop("`window` must be a positive numeric value (e.g. 1e4, 1e5, 1e6).")
+  }
+  
+  if (!is.numeric(cutoff) || cutoff <= 0 || cutoff >= 1) {
+    stop("`cutoff` must be a numeric quantile between 0 and 1 (e.g. 0.95).")
+  }
+  
+  if (!is.character(allele_file) || !file.exists(allele_file)) {
+    stop("`allele_file` must be a valid path to a TSV file with columns: seqid, location.")
+  }
+  
+  if (!is.character(rm_file) || !file.exists(rm_file)) {
+    stop("`rm_file` must be a valid path to a RepeatMasker .out file readable by read_rm_out().")
+  }
+  
+  
+  message("Running Speciation Analysis for: ", species)
+  message("Window size: ", window)
+  message("Quantile cutoff: ", cutoff)
+  
+  # ------------------------------
+  # Load required libraries
+  # ------------------------------
+  suppressPackageStartupMessages({
+    library(dplyr)
+    library(readr)
+    library(stringr)
+  })
+  
+  # ------------------------------
+  # Load RepeatMasker data
+  # ------------------------------
+  rm_df <- read_rm_out(rm_file)
+  
+  rm_df <- rm_df %>%
+    mutate(
+      species = species,
+      midpoint = abs((begin + end) / 2),
+      midpoint_window = midpoint / window
+    )
+  
+  # ------------------------------
+  # Load SNP data
+  # ------------------------------
+  DM <- read_tsv(allele_file, col_names = FALSE, show_col_types = FALSE)
+  colnames(DM) <- c("seqid", "location")
+  
+  DM <- DM %>%
+    mutate(species = species)
+  
+  # ------------------------------
+  # Chromosome re-mapping
+  # ------------------------------
+  group_levels <- c("X_chr", paste0("chr_", 1:14), "Unplaced")
+  
+  DM <- DM %>%
+    mutate(
+      group = case_when(
+        seqid == "chr_1" ~ "X_chr",
+        seqid %in% paste0("chr_", 2:15) ~
+          paste0("chr_", as.numeric(str_remove(seqid, "chr_")) - 1),
+        TRUE ~ "Unplaced"
+      ),
+      group = factor(group, levels = group_levels)
+    )
+  
+  rm_df <- rm_df %>%
+    mutate(
+      group = factor(group, levels = group_levels)
+    )
+  
+  # ------------------------------
+  # SNP density per window
+  # ------------------------------
+  allele_density <- DM %>%
+    mutate(bin = floor(location / window) * window) %>%
+    group_by(species, group, bin) %>%
+    summarise(
+      density = n() / (window / window),
+      .groups = "drop"
+    ) %>%
+    mutate(pos = bin / window)
+  
+  # ------------------------------
+  # Quantile cutoffs per chromosome
+  # ------------------------------
+  cutoffs <- allele_density %>%
+    group_by(group) %>%
+    summarise(
+      cutoff = quantile(density, cutoff, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # ------------------------------
+  # Speciation classification
+  # ------------------------------
+  allele_density <- allele_density %>%
+    left_join(cutoffs, by = "group") %>%
+    mutate(
+      Region_Speciation = if_else(density >= cutoff, 1L, 0L)
+    )
+  
+  # ------------------------------
+  # Feature density (RepeatMasker)
+  # ------------------------------
+  feature_density <- rm_df %>%
+    filter(group %in% group_levels[1:15]) %>%
+    mutate(bin = floor(midpoint / window) * window) %>%
+    group_by(group, bin) %>%
+    summarise(
+      density = n() / (window / window),
+      .groups = "drop"
+    ) %>%
+    mutate(pos = bin / window)
+  
+  # ------------------------------
+  # Output object
+  # ------------------------------
+  analysis <- list(
+    species = species,
+    window = window,
+    cutoff = cutoff,
+    allele_density = allele_density,
+    feature_density = feature_density,
+    cutoffs = cutoffs,
+    rm_df = rm_df,
+    snps = DM
+  )
+  
+  class(analysis) <- "SpeciationAnalysis"
+  
+  return(analysis)
+}
+
+##===============================================================================================##
+#' Plot Genome-wide Speciation and Feature Density Tracks
+#'
+#' This function visualizes the output of \code{Speciation_Analysis()} as
+#' a two-track genome plot. The lower track encodes speciation-enriched
+#' windows (based on SNP density cutoffs) as colored tiles, while the
+#' upper track displays RepeatMasker feature density as a continuous line.
+#'
+#' Each chromosome (or scaffold group) is shown in a separate facet,
+#' allowing direct comparison of genomic structure and speciation signal
+#' across the genome.
+#'
+#' @param analysis A \code{SpeciationAnalysis} object returned by
+#'   \code{Speciation_Analysis()}.
+#' @param speciation_colors Character vector of length 2 specifying colors
+#'   for non-speciation (0) and speciation (1) windows.
+#' @param line_width Numeric. Line width for the feature density track
+#'   (default = 0.8).
+#'
+#' @return A \code{ggplot} object containing the genome track visualization.
+#'
+#' @examples
+#' \dontrun{
+#' analysis <- Speciation_Analysis(
+#'   species = "Gpenn",
+#'   window = 1e6,
+#'   allele_file = "alleles.tsv",
+#'   rm_file = "repeatmasker.out"
+#' )
+#'
+#' p <- plot_speciation_tracks(analysis)
+#' print(p)
+#' }
 
 
+
+plot_speciation_tracks <- function(analysis,
+                                   speciation_colors = c("grey80", "red"),
+                                   line_width = 0.8) {
+  
+  # ------------------------------
+  # Input checks
+  # ------------------------------
+  if (!inherits(analysis, "SpeciationAnalysis")) {
+    stop("Input must be an object returned by Speciation_Analysis().")
+  }
+  
+  if (!all(c("allele_density", "feature_density") %in% names(analysis))) {
+    stop("SpeciationAnalysis object is missing required slots.")
+  }
+  
+  allele_density  <- analysis$allele_density
+  feature_density <- analysis$feature_density
+  
+  # ------------------------------
+  # Math setup for tracks
+  # ------------------------------
+  max_y <- max(feature_density$density, na.rm = TRUE)
+  
+  if (!is.finite(max_y)) {
+    stop("Feature density contains no finite values.")
+  }
+  
+  track_height <- max_y * 0.1
+  track_y_pos  <- -(track_height / 2)
+  
+  # ------------------------------
+  # Plot
+  # ------------------------------
+  p <- ggplot() +
+    
+    # --- Track 1: Speciation windows ---
+    geom_tile(
+      data = allele_density,
+      aes(x = pos,
+          y = track_y_pos,
+          fill = as.factor(Region_Speciation)),
+      height = track_height,
+      width  = 1
+    ) +
+    
+    # --- Track 2: Feature density ---
+    geom_line(
+      data = feature_density,
+      aes(x = pos, y = density),
+      linewidth = line_width
+    ) +
+    
+    # --- Formatting ---
+    scale_fill_manual(
+      values = speciation_colors,
+      name = "Speciation"
+    ) +
+    
+    facet_wrap(~group, scales = "free_x") +
+    coord_cartesian(ylim = c(-track_height, NA)) +
+    labs(
+      x = "Genomic position (windows)",
+      y = "Density",
+      title = paste0("Speciation tracks: ", analysis$species),
+      subtitle = paste0("Window = ", format(analysis$window, scientific = TRUE),
+                        " | Cutoff = ", analysis$cutoff)
+    ) +
+    theme_bw() +
+    theme(
+      legend.position = "top",
+      panel.spacing = unit(0.8, "lines"),
+      strip.background = element_rect(fill = "grey90"),
+      strip.text = element_text(face = "bold")
+    )
+  
+  return(p)
+}
+##===============================================================================================##
