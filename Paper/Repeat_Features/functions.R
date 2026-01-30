@@ -356,6 +356,7 @@ Speciation_Analysis <- function(
   # ------------------------------
   # Quantile cutoffs per chromosome
   # ------------------------------
+  ## Need to make it include the implicit lengths of each chromosome so the totals are calulated correctly
   cutoffs <- allele_density %>%
     group_by(group) %>%
     summarise(
