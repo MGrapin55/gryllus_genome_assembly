@@ -232,6 +232,11 @@ granges_object <- function(rm_df) {
 #'   with columns: \code{seqid, location}.
 #' @param rm_file Character. Path to RepeatMasker .out file
 #'   parsed using \code{read_rm_out()}.
+#' @param chr_length Character. Path to chromosome lengths TSV file 
+#'    with columns: \code{seqid, Length_BP}
+#'    @param key Character. Path to chromosome names key file 
+#'    with columns: \code{Renamed, Orginal}
+
 #' @param cutoff Numeric. Quantile cutoff for SNP density
 #'   (default = 0.95).
 #'
@@ -250,7 +255,9 @@ granges_object <- function(rm_df) {
 #'   species = "Gpenn",
 #'   window = 1e6,
 #'   allele_file = "alleles.tsv",
-#'   rm_file = "repeatmasker.out"
+#'   rm_file = "repeatmasker.out", 
+#'   chr_length = "Gpenn.lengths.tsv",
+#'   key = "Gpenn.key.tsv"
 #' )
 #' }
 
@@ -259,6 +266,8 @@ Speciation_Analysis <- function(
     window = 1e6,
     allele_file,
     rm_file,
+    chr_length,
+    key,
     cutoff = 0.95
 ) {
   
@@ -285,6 +294,14 @@ Speciation_Analysis <- function(
     stop("`rm_file` must be a valid path to a RepeatMasker .out file readable by read_rm_out().")
   }
   
+  if (!is.character(chr_length) || !file.exists(chr_length)) {
+    stop("`chr_length` must be a valid path to a TSV file with columns: seqid, Length_BP")
+  }
+  
+  if (!is.character(key) || !file.exists(key)) {
+    stop("`key` must be a valid path to a TSV file with columns: Renamed, Orginal")
+  }
+  
   
   message("Running Speciation Analysis for: ", species)
   message("Window size: ", window)
@@ -307,8 +324,7 @@ Speciation_Analysis <- function(
   rm_df <- rm_df %>%
     mutate(
       species = species,
-      midpoint = abs((begin + end) / 2),
-      midpoint_window = midpoint / window
+      midpoint = abs((begin + end) / 2)
     )
   
   # ------------------------------
@@ -321,10 +337,48 @@ Speciation_Analysis <- function(
     mutate(species = species)
   
   # ------------------------------
-  # Chromosome re-mapping
+  # Load Chromosome Length Data
   # ------------------------------
   group_levels <- c("X_chr", paste0("chr_", 1:14), "Unplaced")
+
+  # Read inputs
+  chr_df <- read_tsv(chr_length,
+                     col_names = c("Renamed", "Length_BP"),
+                     show_col_types = FALSE)
   
+  key_df <- read_tsv(key, show_col_types = FALSE)
+  
+  # Join and keep only what we need
+  chr_df <- left_join(chr_df, key_df, by = "Renamed")
+  chr_df <- chr_df[, c("Orginal", "Length_BP")]
+  
+  # Keep first 15 rows
+  chr_df <- chr_df[1:15, ]
+  
+  # Rename for consistency
+  names(chr_df)[names(chr_df) == "Orginal"] <- "group"
+  
+  # Remap chromosome names
+  chr_df$group <- ifelse(chr_df$group == "chr_1", "X_chr", chr_df$group)
+  
+  idx <- chr_df$group %in% paste0("chr_", 2:15)
+  chr_df$group[idx] <- paste0(
+    "chr_",
+    as.numeric(str_remove(chr_df$group[idx], "chr_")) - 1
+  )
+  
+  chr_df$group[!chr_df$group %in% group_levels] <- "Unplaced"
+  
+  # Apply factor order
+  chr_df$group <- factor(chr_df$group, levels = group_levels)
+  
+  # Order by chromosome
+  chr_length_df <- chr_df[order(chr_df$group), ]
+  
+  
+  # ------------------------------
+  # Chromosome re-mapping
+  # ------------------------------
   DM <- DM %>%
     mutate(
       group = case_when(
@@ -344,14 +398,25 @@ Speciation_Analysis <- function(
   # ------------------------------
   # SNP density per window
   # ------------------------------
-  allele_density <- DM %>%
+  all_windows <- chr_length_df %>%
+    mutate(bin = map(Length_BP, ~ seq(0, .x, by = window))) %>%
+    unnest(bin) %>%
+    select(group, bin)
+  
+  snp_bins <- DM %>%
     mutate(bin = floor(location / window) * window) %>%
-    group_by(species, group, bin) %>%
-    summarise(
-      density = n() / (window / window),
-      .groups = "drop"
-    ) %>%
-    mutate(pos = bin / window)
+    count(species, group, bin, name = "n_snps")
+  
+  allele_density <- expand_grid(
+    species = unique(DM$species),
+    group   = unique(chr_length_df$group)
+  ) %>%
+    left_join(all_windows, by = "group") %>%
+    left_join(snp_bins, by = c("species", "group", "bin")) %>%
+    mutate(
+      n_snps = replace_na(n_snps, 0),
+      pos = bin / window
+    )
   
   # ------------------------------
   # Quantile cutoffs per chromosome
@@ -360,7 +425,7 @@ Speciation_Analysis <- function(
   cutoffs <- allele_density %>%
     group_by(group) %>%
     summarise(
-      cutoff = quantile(density, cutoff, na.rm = TRUE),
+      cutoff = quantile(n_snps, cutoff, na.rm = TRUE),
       .groups = "drop"
     )
   
@@ -370,7 +435,7 @@ Speciation_Analysis <- function(
   allele_density <- allele_density %>%
     left_join(cutoffs, by = "group") %>%
     mutate(
-      Region_Speciation = if_else(density >= cutoff, 1L, 0L)
+      Region_Speciation = if_else(n_snps >= cutoff, 1L, 0L)
     )
   
   # ------------------------------
@@ -397,7 +462,8 @@ Speciation_Analysis <- function(
     feature_density = feature_density,
     cutoffs = cutoffs,
     rm_df = rm_df,
-    snps = DM
+    snps = DM,
+    lengths = chr_length_df
   )
   
   class(analysis) <- "SpeciationAnalysis"
@@ -518,4 +584,35 @@ plot_speciation_tracks <- function(analysis,
   
   return(p)
 }
+##===============================================================================================##
+# Function: make_chr_lengths
+# Reads in a tsv of seqid, Length_BP and formats it to a df used in Speciation Analysis() function.
+make_chr_lengths <- function(prefix,
+                             chr_lengths_tsv,
+                             asm_key_tsv,
+                             group_levels) {
+  
+  read_tsv(chr_lengths_tsv, col_names = FALSE) %>%
+    rename(Renamed = X1, Length_BP = X2) %>%
+    left_join(
+      read_tsv(asm_key_tsv),
+      by = "Renamed"
+    ) %>%
+    select(Orginal, Length_BP) %>%
+    slice_head(n = 15) %>%
+    rename(group = Orginal) %>%
+    mutate(
+      group = case_when(
+        group == "chr_1" ~ "X_chr",
+        group %in% paste0("chr_", 2:15) ~
+          paste0("chr_", as.numeric(str_remove(group, "chr_")) - 1),
+        TRUE ~ "Unplaced"
+      ),
+      group = factor(group, levels = group_levels),
+      species = prefix
+    ) %>%
+    arrange(group)
+}
+# This function could be cleaned up it it just fits more module rather than writing all this out. 
+
 ##===============================================================================================##
