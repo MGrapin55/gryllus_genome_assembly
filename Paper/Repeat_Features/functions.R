@@ -268,9 +268,11 @@ Speciation_Analysis <- function(
     rm_file,
     chr_length,
     key,
-    cutoff = 0.95
-) {
-  
+    cutoff = 0.95,
+    filter_class = NULL,
+    filter_class_family = NULL
+) 
+  {
   # ------------------------------
   # Input validation
   # ------------------------------
@@ -307,6 +309,7 @@ Speciation_Analysis <- function(
   message("Window size: ", window)
   message("Quantile cutoff: ", cutoff)
   
+  
   # ------------------------------
   # Load required libraries
   # ------------------------------
@@ -324,8 +327,22 @@ Speciation_Analysis <- function(
   rm_df <- rm_df %>%
     mutate(
       species = species,
-      midpoint = abs((begin + end) / 2)
+      midpoint = abs((begin + end) / 2),
+      class = sub("/.*", "", class_family)
     )
+  
+  # if flag filter_class == value Run this block else skips it filter_class flag is off by default 
+  if (!is.null(filter_class)) {
+    message("Filtering by repeat class: ", filter_class)
+    rm_df <- rm_df %>%
+      filter(class == filter_class)
+  }
+  
+  if (!is.null(filter_class_family)) {
+    message("Filtering by repeat class/family: ", filter_class_family)
+    rm_df <- rm_df %>%
+      filter(class == filter_class_family)
+  }
   
   # ------------------------------
   # Load SNP data
@@ -399,7 +416,9 @@ Speciation_Analysis <- function(
   # SNP density per window
   # ------------------------------
   all_windows <- chr_length_df %>%
-    mutate(bin = map(Length_BP, ~ seq(0, .x, by = window))) %>%
+    mutate(
+      bin = map(Length_BP, ~ seq(0, .x - 1, by = window))  #Fixes the last window (i.e 10 -> 15) not being a 0 because no genomic content
+    ) %>%
     unnest(bin) %>%
     select(group, bin)
   
@@ -421,7 +440,6 @@ Speciation_Analysis <- function(
   # ------------------------------
   # Quantile cutoffs per chromosome
   # ------------------------------
-  ## Need to make it include the implicit lengths of each chromosome so the totals are calulated correctly
   cutoffs <- allele_density %>%
     group_by(group) %>%
     summarise(
@@ -435,21 +453,38 @@ Speciation_Analysis <- function(
   allele_density <- allele_density %>%
     left_join(cutoffs, by = "group") %>%
     mutate(
-      Region_Speciation = if_else(n_snps >= cutoff, 1L, 0L)
+      Region_Speciation = if_else(n_snps > cutoff, 1L, 0L)        # was >= vs just > (Matters for the visual)
     )
   
   # ------------------------------
   # Feature density (RepeatMasker)
   # ------------------------------
-  feature_density <- rm_df %>%
+  RM_bins <- rm_df %>%
     filter(group %in% group_levels[1:15]) %>%
     mutate(bin = floor(midpoint / window) * window) %>%
-    group_by(group, bin) %>%
-    summarise(
-      density = n() / (window / window),
-      .groups = "drop"
-    ) %>%
-    mutate(pos = bin / window)
+    count(species, group, bin, name = "n_repeats")
+  
+  feature_density <- expand_grid(
+    species = unique(rm_df$species),
+    group   = unique(chr_length_df$group)
+  ) %>%
+    left_join(all_windows, by = "group") %>%
+    left_join(RM_bins, by = c("species", "group", "bin")) %>%
+    mutate(
+      n_repeats = replace_na(n_repeats, 0),
+      pos = bin / window
+    )
+  
+  
+  # feature_density <- rm_df %>%
+  #   filter(group %in% group_levels[1:15]) %>%
+  #   mutate(bin = floor(midpoint / window) * window) %>%
+  #   group_by(group, bin) %>%
+  #   summarise(
+  #     density = n() / (window / window),
+  #     .groups = "drop"
+  #   ) %>%
+  #   mutate(pos = bin / window)
   
   # ------------------------------
   # Output object
@@ -528,7 +563,7 @@ plot_speciation_tracks <- function(analysis,
   # ------------------------------
   # Math setup for tracks
   # ------------------------------
-  max_y <- max(feature_density$density, na.rm = TRUE)
+  max_y <- max(feature_density$n_repeats, na.rm = TRUE)
   
   if (!is.finite(max_y)) {
     stop("Feature density contains no finite values.")
@@ -555,7 +590,7 @@ plot_speciation_tracks <- function(analysis,
     # --- Track 2: Feature density ---
     geom_line(
       data = feature_density,
-      aes(x = pos, y = density),
+      aes(x = pos, y = n_repeats),
       linewidth = line_width
     ) +
     
@@ -569,7 +604,7 @@ plot_speciation_tracks <- function(analysis,
     coord_cartesian(ylim = c(-track_height, NA)) +
     labs(
       x = "Genomic position (windows)",
-      y = "Density",
+      y = "Number of Repeats Per Window",
       title = paste0("Speciation tracks: ", analysis$species),
       subtitle = paste0("Window = ", format(analysis$window, scientific = TRUE),
                         " | Cutoff = ", analysis$cutoff)
@@ -587,32 +622,93 @@ plot_speciation_tracks <- function(analysis,
 ##===============================================================================================##
 # Function: make_chr_lengths
 # Reads in a tsv of seqid, Length_BP and formats it to a df used in Speciation Analysis() function.
-make_chr_lengths <- function(prefix,
-                             chr_lengths_tsv,
-                             asm_key_tsv,
-                             group_levels) {
+make_chr_lengths <- function(chr_length, key, prefix, group_levels) {
   
-  read_tsv(chr_lengths_tsv, col_names = FALSE) %>%
-    rename(Renamed = X1, Length_BP = X2) %>%
-    left_join(
-      read_tsv(asm_key_tsv),
-      by = "Renamed"
-    ) %>%
-    select(Orginal, Length_BP) %>%
-    slice_head(n = 15) %>%
-    rename(group = Orginal) %>%
-    mutate(
-      group = case_when(
-        group == "chr_1" ~ "X_chr",
-        group %in% paste0("chr_", 2:15) ~
-          paste0("chr_", as.numeric(str_remove(group, "chr_")) - 1),
-        TRUE ~ "Unplaced"
-      ),
-      group = factor(group, levels = group_levels),
-      species = prefix
-    ) %>%
-    arrange(group)
+  library(dplyr)
+  library(readr)
+  library(stringr)
+  
+  # Read inputs
+  chr_df <- read_tsv(chr_length,
+                     col_names = c("Renamed", "Length_BP"),
+                     show_col_types = FALSE)
+  
+  key_df <- read_tsv(key, show_col_types = FALSE)
+  
+  # Join and keep only what we need
+  chr_df <- left_join(chr_df, key_df, by = "Renamed")
+  chr_df <- chr_df[, c("Orginal", "Length_BP")]
+  
+  # Keep first 15 chromosomes
+  chr_df <- chr_df[1:15, ]
+  
+  # Rename for consistency
+  names(chr_df)[names(chr_df) == "Orginal"] <- "group"
+  
+  # Remap chromosome names
+  chr_df$group <- ifelse(chr_df$group == "chr_1", "X_chr", chr_df$group)
+  
+  idx <- chr_df$group %in% paste0("chr_", 2:15)
+  chr_df$group[idx] <- paste0(
+    "chr_",
+    as.numeric(str_remove(chr_df$group[idx], "chr_")) - 1
+  )
+  
+  chr_df$group[!chr_df$group %in% group_levels] <- "Unplaced"
+  
+  # Apply factor order
+  chr_df$group <- factor(chr_df$group, levels = group_levels)
+  
+  # Add species prefix
+  chr_df$species <- prefix
+  
+  # Order by chromosome
+  chr_df <- chr_df[order(chr_df$group), ]
+  
+  return(chr_df)
 }
+
 # This function could be cleaned up it it just fits more module rather than writing all this out. 
 
+##===============================================================================================##
+# Function to make repeat feature densities per species along the whole chromosome
+make_feature_density <- function(chr_length_df, rm_df, window) {
+  
+  # ------------------------------
+  # 1) Build windows per chromosome (and species if present)
+  # ------------------------------
+  all_windows <- chr_length_df %>%
+    mutate(
+      bin = purrr::map(Length_BP, ~ seq(0, .x - 1, by = window))
+    ) %>%
+    tidyr::unnest(bin) %>%
+    dplyr::select(species, group, bin)
+  
+  # ------------------------------
+  # 2) Bin repeat midpoints
+  # ------------------------------
+  RM_bins <- rm_df %>%
+    mutate(
+      midpoint  = (begin + end) / 2,
+      length_bp = abs(end - begin),
+      bin       = floor(midpoint / window) * window
+    ) %>%
+    group_by(species, group, bin, class_family) %>%
+    summarise(
+      n_repeats    = n(),
+      n_repeats_bp = sum(length_bp),
+      .groups = "drop"
+    )
+  
+  # ------------------------------
+  # 3) Join repeats into windows
+  # ------------------------------
+  feature_density <- all_windows %>%
+    left_join(RM_bins,
+              by = c("species", "group", "bin")) %>%
+    tidyr::replace_na(list(n_repeats = 0)) %>%
+    mutate(pos = bin / window)
+  
+  return(feature_density)
+}
 ##===============================================================================================##
