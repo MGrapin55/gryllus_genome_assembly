@@ -328,6 +328,7 @@ Speciation_Analysis <- function(
     mutate(
       species = species,
       midpoint = abs((begin + end) / 2),
+      length_bp = abs(end - begin),
       class = sub("/.*", "", class_family)
     )
   
@@ -417,7 +418,8 @@ Speciation_Analysis <- function(
   # ------------------------------
   all_windows <- chr_length_df %>%
     mutate(
-      bin = map(Length_BP, ~ seq(0, .x - 1, by = window))  #Fixes the last window (i.e 10 -> 15) not being a 0 because no genomic content
+      #bin = map(Length_BP, ~ seq(0, .x - 1, by = window))  #Fixes the last window (i.e 10 -> 15) not being a 0 because no genomic content
+      bin = purrr::map(Length_BP, ~ seq(0, floor((.x - 1) / window) * window, by = window))
     ) %>%
     unnest(bin) %>%
     select(group, bin)
@@ -462,8 +464,12 @@ Speciation_Analysis <- function(
   RM_bins <- rm_df %>%
     filter(group %in% group_levels[1:15]) %>%
     mutate(bin = floor(midpoint / window) * window) %>%
-    count(species, group, bin, name = "n_repeats")
-  
+    summarise(
+      n_repeats = n(),              # number of repeat elements
+      repeat_bp = sum(length_bp),   # total bp in bin (or use length column if you have one)
+      .groups = "drop"
+    )
+
   feature_density <- expand_grid(
     species = unique(rm_df$species),
     group   = unique(chr_length_df$group)
@@ -472,9 +478,15 @@ Speciation_Analysis <- function(
     left_join(RM_bins, by = c("species", "group", "bin")) %>%
     mutate(
       n_repeats = replace_na(n_repeats, 0),
+      repeat_bp = replace_na(repeats_bp, 0),
       pos = bin / window
     )
   
+  # feature_density <- make_feature_density(
+  #   chr_length_df = chr_length_df,
+  #   rm_df = rm_df,
+  #   window = window
+  # )
   
   # feature_density <- rm_df %>%
   #   filter(group %in% group_levels[1:15]) %>%
@@ -679,7 +691,8 @@ make_feature_density <- function(chr_length_df, rm_df, window) {
   # ------------------------------
   all_windows <- chr_length_df %>%
     mutate(
-      bin = purrr::map(Length_BP, ~ seq(0, .x - 1, by = window))
+      #bin = purrr::map(Length_BP, ~ seq(0, .x - 1, by = window))
+      bin = purrr::map(Length_BP, ~ seq(0, floor((.x - 1) / window) * window, by = window))
     ) %>%
     tidyr::unnest(bin) %>%
     dplyr::select(species, group, bin)
@@ -687,11 +700,25 @@ make_feature_density <- function(chr_length_df, rm_df, window) {
   # ------------------------------
   # 2) Bin repeat midpoints
   # ------------------------------
+  # RM_bins <- rm_df %>%
+  #   mutate(
+  #     midpoint  = (begin + end) / 2,
+  #     length_bp = abs(end - begin),
+  #     bin       = floor(midpoint / window) * window
+  #   ) %>%
+  #   group_by(species, group, bin, class_family) %>%
+  #   summarise(
+  #     n_repeats    = n(),
+  #     n_repeats_bp = sum(length_bp),
+  #     .groups = "drop"
+  #   )
   RM_bins <- rm_df %>%
+    left_join(chr_length_df, by = c("species", "group")) %>%
     mutate(
       midpoint  = (begin + end) / 2,
       length_bp = abs(end - begin),
-      bin       = floor(midpoint / window) * window
+      max_bin   = floor((Length_BP - 1) / window) * window,
+      bin       = pmin(floor(midpoint / window) * window, max_bin)
     ) %>%
     group_by(species, group, bin, class_family) %>%
     summarise(
@@ -700,14 +727,18 @@ make_feature_density <- function(chr_length_df, rm_df, window) {
       .groups = "drop"
     )
   
+  
   # ------------------------------
   # 3) Join repeats into windows
   # ------------------------------
   feature_density <- all_windows %>%
-    left_join(RM_bins,
-              by = c("species", "group", "bin")) %>%
-    tidyr::replace_na(list(n_repeats = 0)) %>%
+    left_join(RM_bins, by = c("species", "group", "bin")) %>%
+    tidyr::replace_na(list(
+      n_repeats = 0,
+      n_repeats_bp = 0
+    )) %>%
     mutate(pos = bin / window)
+  
   
   return(feature_density)
 }
