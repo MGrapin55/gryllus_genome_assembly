@@ -1,83 +1,70 @@
 import sys
 import argparse
-import inflect
 import re
 import csv
 
-# 1. INITIALIZE INFLECT ENGINE (Global)
-inflect_engine = inflect.engine()
-
 def generate_correction(old_name):
-    """Takes an original bad name and generates the fixed version and any notes."""
-    # Use 'name' for the string to avoid colliding with 'inflect_engine'
+    """Takes an original bad name, applies custom rules, and generates the fixed version."""
     name = str(old_name).strip()
     notes_to_add = []
 
-    # 1. Fix the "Descriptive Sentence" trap
-    sentence_keywords = [' is ', ' forms ', ' acts ', ' involved ', ' constituent ', ' functions ', ' contains ']
-    if any(verb in name.lower() for verb in sentence_keywords) or len(name.split()) > 6:
-        return "hypothetical protein", ["Original description: " + name]
+    # ==========================================
+    # 1. NON-FATAL CUSTOM RULES
+    # ==========================================
 
-    # 2. Fix Plurals using inflect on the LAST word
-    words = name.split()
-    if words:
-        last_word = words[-1]
-        # Use the specific global name for the inflect engine here
-        singular = inflect_engine.singular_noun(last_word)
-        
-        if singular:
-            words[-1] = singular
-            name = " ".join(words)
+    # SUSPECT: 40 features are all capital letters (Treat as domains)
+    if name.isupper() and any(c.isalpha() for c in name):
+        name = f"Putative {name} domain-containing protein"
 
-    # 3. Clean up formatting errors flagged by NCBI
-    name = name.replace('()', '').replace('[]', '') # Empty brackets
-    name = name.rstrip('.') # Trailing periods
-    name = name.replace('. ', ' ') # Periods followed by space
-    
-    # 4. FATAL: Low Quality Protein
+    # SUSPECT: contains 'other' (Change to specific transporter)
+    if re.search(r'(?i)\bother\b', name):
+        name = "putative sugar transporter protein"
+
+    # SUSPECT: > 100 characters / 'Fragment' species extraction
+    # Extracts binomial species names in parentheses (e.g., "(Drosophila melanogaster)")
+    # and moves them to the notes as "evidence from <species>"
+    species_matches = re.findall(r'\(([A-Z][a-z]+\s+[a-z]+(?:\s+.*?)?)\)', name)
+    for species in species_matches:
+        notes_to_add.append(f"evidence from {species}")
+        name = name.replace(f"({species})", "")
+
+    # SUSPECT: 320 features contain 'Fragment'
+    if re.search(r'(?i)\bfragment\b', name):
+        # Removes the word fragment and any surrounding parentheses if present
+        name = re.sub(r'(?i)\(?\bfragment\b\)?', '', name)
+
+    # SUSPECT: Implies evolutionary relationship
+    name = re.sub(r'(?i)\bhomolog(ue)?\b', '-like protein', name)
+
+    # SUSPECT: 196 features start with 'belongs'
+    if re.search(r'(?i)^belongs to (the )?', name):
+        name = re.sub(r'(?i)^belongs to (the )?', 'Putative ', name)
+        # Append 'protein' if it doesn't already end with it
+        if not re.search(r'(?i)protein$', name):
+            name = name.strip() + " protein"
+
+    # ==========================================
+    # 2. FATAL CLEANUP RULES
+    # ==========================================
+
+    # FATAL: Low Quality Protein
     if re.search(r'(?i)low quality protein', name):
         name = re.sub(r'(?i)low quality protein', 'hypothetical protein', name)
         notes_to_add.append("Originally labeled as Low Quality Protein")
 
-    # 5. Evolutionary relationship (Homolog/Homologue)
-    name = re.sub(r'(?i)\bhomolog(ue)?\b', '-like protein', name)
-
-    # 6. Database identifiers (underscores, TC, 3+ numbers)
-    name = name.replace('_', ' ')
-    if '(TC' in name:
-        name = re.sub(r'\(TC[^)]*\)', '', name)
-
-    # 7. Short product name instead of phrase
-    name = re.sub(r'(?i)^belongs to (the )?', '', name)
-    name = re.sub(r'(?i)\s+activity$', '', name)
-
-    # 8. Use protein instead of gene
-    name = re.sub(r'(?i)\bgene\b', 'protein', name)
-
-    # 9. Putative Typos (Caps, 'gp', plural 'proteins')
-    if name.isupper():
-        name = name.lower()
+    # FATAL: Formatting errors (empty brackets, periods followed by space, trailing periods)
+    name = name.replace('()', '').replace('[]', '') 
+    name = name.replace('. ', ' ') 
+    name = name.rstrip('.') 
     
-    name = re.sub(r'(?i)^gp\s*', '', name)
-    name = re.sub(r'(?i)\bproteins\b', 'protein', name) 
-
-    # 10. Suspicious phrases ('Fragment')
-    name = re.sub(r'(?i)\bfragment\b', '', name)
-
-    # 11. Is longer than 100 characters (SAFE TRUNCATION)
-    if len(name) > 95:
-        name = name[:95].rsplit(' ', 1)[0] 
-
-    # Cleanup extra whitespace
+    # Cleanup extra whitespace left behind by regex replacements
     name = re.sub(r'\s+', ' ', name).strip()
 
-    # Fallback
+    # FATAL: Product name does not contain letters
     if not name or not any(c.isalpha() for c in name):
         name = "hypothetical protein"
 
     return name, notes_to_add
-
-
 
 def build_correction_dictionary(report_file):
     """Parses the discrepancy report and returns a dict of {Original: {'new_name': str, 'notes': list}}."""
@@ -125,20 +112,19 @@ def patch_gff(gff_in, gff_out, corrections_dict):
                 current_product = attributes['product']
                 
                 if current_product in corrections_dict:
-                    # Extract our saved dict data
                     correction_data = corrections_dict[current_product]
                     
-                    # Update the product with our correction
                     attributes['product'] = correction_data['new_name']
                     
-                    # Compile all notes
-                    new_notes = [f"Original product name: {current_product}"] + correction_data['notes']
-                    existing_note = attributes.get('Note', '')
-                    
-                    if existing_note:
-                        attributes['Note'] = f"{existing_note}, " + ", ".join(new_notes)
-                    else:
-                        attributes['Note'] = ", ".join(new_notes)
+                    # Only add notes if the script generated new ones (e.g. species evidence)
+                    if correction_data['notes']:
+                        new_notes = [f"Original product name: {current_product}"] + correction_data['notes']
+                        existing_note = attributes.get('Note', '')
+                        
+                        if existing_note:
+                            attributes['Note'] = f"{existing_note}, " + ", ".join(new_notes)
+                        else:
+                            attributes['Note'] = ", ".join(new_notes)
 
             new_attributes_str = ';'.join([f"{k}={v}" for k, v in attributes.items()])
             cols[8] = new_attributes_str
@@ -155,7 +141,7 @@ def write_tsv(corrections_dict, tsv_file):
             writer.writerow([orig, data['new_name'], notes_str])
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Patch GFF using a table2asn discrepancy report.')
+    parser = argparse.ArgumentParser(description='Patch GFF using targeted custom rules.')
     parser.add_argument('-r', '--report', required=True, help='The text file containing the discrepancy report')
     parser.add_argument('-i', '--input', required=True, help='The input GFF file')
     parser.add_argument('-o', '--output', required=True, help='The output GFF file')
