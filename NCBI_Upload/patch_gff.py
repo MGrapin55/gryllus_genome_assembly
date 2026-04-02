@@ -94,6 +94,10 @@ def build_correction_dictionary(report_file):
     """Parses the discrepancy report and returns a dict of {Original: {'new_name': str, 'notes': list}}."""
     corrections = {}
     
+    # Regex to catch NCBI locus tags (e.g., ACWDOJ_015419)
+    # Matches 1+ uppercase letters/numbers, an underscore, and 1+ digits
+    locus_tag_pattern = re.compile(r'^[A-Z0-9]+_\d+$')
+    
     with open(report_file, 'r') as report:
         for line in report:
             if line.startswith('SUSPECT') or not line.strip():
@@ -102,6 +106,10 @@ def build_correction_dictionary(report_file):
             parts = line.split('\t')
             if len(parts) >= 3:
                 original_product = parts[1].strip()
+                
+                # EXCLUSION RULE: Skip if the extracted string is a locus tag
+                if locus_tag_pattern.match(original_product):
+                    continue
                 
                 if original_product and original_product not in corrections:
                     fixed_name, notes = generate_correction(original_product)
@@ -113,6 +121,8 @@ def build_correction_dictionary(report_file):
                             'new_name': fixed_name,
                             'notes': notes
                         }
+                        
+    return corrections
                     
     return corrections
 
