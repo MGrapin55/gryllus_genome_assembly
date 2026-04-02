@@ -4,98 +4,95 @@ import re
 import csv
 
 def generate_correction(old_name):
-    """Takes an original bad name, applies custom rules, and generates the fixed version."""
+    """Iteratively applies hierarchical rules until the product name stabilizes."""
     name = str(old_name).strip()
-    notes_to_add = []
+    notes_to_add = set() 
 
-    # ==========================================
-    # 1. NON-FATAL CUSTOM RULES
-    # ==========================================
+    while True:
+        prev_name = name
 
-    # SUSPECT: 40 features are all capital letters (Treat as domains)
-    if name.isupper() and any(c.isalpha() for c in name):
-        name = f"Putative {name} domain-containing protein"
+        # =========================================================
+        # TIER 1: PHRASE & KEYWORD REPLACEMENTS
+        # =========================================================
+        # 1.1 'other' -> putative sugar transporter protein
+        if re.search(r'(?i)\bother\b', name):
+            name = "putative sugar transporter protein"
 
-    # SUSPECT: contains 'other' (Change to specific transporter)
-    if re.search(r'(?i)\bother\b', name):
-        name = "putative sugar transporter protein"
+        # 1.2 'belongs to' -> Putative [name] protein
+        if re.search(r'(?i)^belongs to (the )?', name):
+            name = re.sub(r'(?i)^belongs to (the )?', 'Putative ', name)
+            if not re.search(r'(?i)protein$', name):
+                name = name.strip() + " protein"
 
-    # NEW RULE: Any parentheses () - Move to notes and remove from name
-    # This also naturally handles the (<species>) extraction
-    paren_matches = re.findall(r'\(([^)]+)\)', name)
-    for match in paren_matches:
-        if match.lower() == 'fragment':
-            continue # Skip here, handled specifically by the Fragment rule below
+        # 1.3 Evolutionary relationship (homolog -> -like)
+        name = re.sub(r'(?i)\bhomolog(ue)?\b', '-like protein', name)
+
+        # 1.4 FATAL: Low Quality Protein
+        if re.search(r'(?i)low quality protein', name):
+            name = re.sub(r'(?i)low quality protein', 'hypothetical protein', name)
+            notes_to_add.add("Originally labeled as Low Quality Protein")
+
+        # =========================================================
+        # TIER 2: PARENTHETICAL & SPECIES EXTRACTIONS
+        # =========================================================
+        # I want to edit this to only include matching () and treat [] separately leaving them in place for now since they often contain important domain info.
+        paren_matches = re.findall(r'\(([^)]+)\)', name)
+        for match in paren_matches:
+            if match.lower() == 'fragment':
+                pass 
+            elif re.match(r'^[A-Z][a-z]+\s+[a-z]+(?:\s+.*)?$', match):
+                notes_to_add.add(f"evidence from {match}")
+            else:
+                notes_to_add.add(f"Original note: {match}")
             
-        # Check if it looks like a binomial species name (Capitalized word + lowercase word)
-        if re.match(r'^[A-Z][a-z]+\s+[a-z]+(?:\s+.*)?$', match):
-            notes_to_add.append(f"evidence from {match}")
-        else:
-            notes_to_add.append(f"Original note: {match}")
-            
-        # Remove the matched parenthesis block from the name
-        name = name.replace(f"({match})", "")
+            name = name.replace(f"({match})", "")
 
-    # NEW RULE: Recheck to make absolutely sure there is no 'Fragment'
-    if re.search(r'(?i)\bfragment\b', name):
+        # =========================================================
+        # TIER 3: STRUCTURAL ARTIFACT CLEANUP
+        # =========================================================
+        # 3.1 Strip 'fragment'
         name = re.sub(r'(?i)\bfragment\b', '', name)
+        
+        # 3.2 Clean empty or broken brackets
+        name = name.replace('()', '').replace('[]', '')
+        if any(char in name for char in '()[]'):
+            if ' ' in name:
+                words = name.split()
+                clean_words = [w for w in words if not any(c in w for c in '()[]')]
+                name = " ".join(clean_words)
+            else:
+                name = "hypothetical protein"
 
-    # NEW RULE: Unopened/Unbalanced Brackets or Parentheses
-    # Clean up empty brackets first just in case
-    name = name.replace('()', '').replace('[]', '')
-    
-    # If any brackets/parentheses are STILL in the string, they are unbalanced
-    if any(char in name for char in '()[]'):
-        if ' ' in name:
-            # If there are spaces, remove the specific words/tokens containing the broken brackets
-            words = name.split()
-            clean_words = [w for w in words if not any(c in w for c in '()[]')]
-            name = " ".join(clean_words)
-        else:
-            # If there are no spaces (it's a single broken word), make it hypothetical
+        # 3.3 Formatting (Periods and Whitespace)
+        name = name.replace('. ', ' ') 
+        name = re.sub(r'\s+', ' ', name).strip()
+        name = name.rstrip('. ')
+
+        # =========================================================
+        # TIER 4: FINAL FORMATTING & FALLBACKS
+        # =========================================================
+        # 4.1 All caps handling (e.g., "ABCD" -> "Putative ABCD domain-containing protein")
+        # Added check for "Putative" to avoid infinite looping/double-prefixing
+        if name.isupper() and any(c.isalpha() for c in name) and not name.startswith("Putative"):
+            name = f"Putative {name} domain-containing protein"
+
+        # 4.2 Empty/Non-Alpha Fallback
+        if not name or not any(c.isalpha() for c in name):
             name = "hypothetical protein"
 
-    # SUSPECT: Implies evolutionary relationship
-    name = re.sub(r'(?i)\bhomolog(ue)?\b', '-like protein', name)
+        # =========================================================
+        # THE BREAK: Exit only when the name is 100% stable
+        # =========================================================
+        if name == prev_name:
+            break
 
-    # SUSPECT: 196 features start with 'belongs'
-    if re.search(r'(?i)^belongs to (the )?', name):
-        name = re.sub(r'(?i)^belongs to (the )?', 'Putative ', name)
-        # Append 'protein' if it doesn't already end with it
-        if not re.search(r'(?i)protein$', name):
-            name = name.strip() + " protein"
-
-    # ==========================================
-    # 2. FATAL CLEANUP RULES
-    # ==========================================
-
-    # FATAL: Low Quality Protein
-    if re.search(r'(?i)low quality protein', name):
-        name = re.sub(r'(?i)low quality protein', 'hypothetical protein', name)
-        notes_to_add.append("Originally labeled as Low Quality Protein")
-
-    # FATAL: Formatting errors (periods followed by space)
-    name = name.replace('. ', ' ') 
-    
-    # Cleanup extra whitespace left behind by regex replacements
-    name = re.sub(r'\s+', ' ', name).strip()
-
-    # NEW RULE: Double check to make sure no changes end with a period
-    # rstrip('. ') removes any trailing periods or spaces at the very end of the string
-    name = name.rstrip('. ')
-
-    # NEW RULE: If it does not contain letters, make it hypothetical protein
-    if not name or not any(c.isalpha() for c in name):
-        name = "hypothetical protein"
-
-    return name, notes_to_add
+    return name, list(notes_to_add)
 
 def build_correction_dictionary(report_file):
     """Parses the discrepancy report and returns a dict of {Original: {'new_name': str, 'notes': list}}."""
     corrections = {}
     
-    # Regex to catch NCBI locus tags (e.g., ACWDOJ_015419)
-    # Matches 1+ uppercase letters/numbers, an underscore, and 1+ digits
+    # Matches 1+ uppercase letters/numbers, an underscore, and 1+ digits (e.g., ACWDOJ_015419)
     locus_tag_pattern = re.compile(r'^[A-Z0-9]+_\d+$')
     
     with open(report_file, 'r') as report:
@@ -107,15 +104,13 @@ def build_correction_dictionary(report_file):
             if len(parts) >= 3:
                 original_product = parts[1].strip()
                 
-                # EXCLUSION RULE: Skip if the extracted string is a locus tag
+                # Exclude lines that are just Locus Tags catching a free ride
                 if locus_tag_pattern.match(original_product):
                     continue
                 
                 if original_product and original_product not in corrections:
                     fixed_name, notes = generate_correction(original_product)
                     
-                    # NEW RULE: If it's not different, don't change it.
-                    # Only add to the dictionary if the name was actually modified.
                     if fixed_name != original_product:
                         corrections[original_product] = {
                             'new_name': fixed_name,
@@ -123,11 +118,12 @@ def build_correction_dictionary(report_file):
                         }
                         
     return corrections
-                    
-    return corrections
 
 def patch_gff(gff_in, gff_out, corrections_dict):
-    """Reads the GFF and applies replacements based strictly on the dictionary."""
+    """Reads the GFF, applies replacements, and returns confirmation counts."""
+    features_scanned = 0
+    features_patched = 0
+
     with open(gff_in, 'r') as infile, open(gff_out, 'w') as outfile:
         for line in infile:
             if line.startswith('#') or not line.strip():
@@ -147,27 +143,33 @@ def patch_gff(gff_in, gff_out, corrections_dict):
                     attributes[key] = value
 
             if 'product' in attributes:
+                features_scanned += 1
                 current_product = attributes['product']
                 
-                # If it's in the dict, it means it's a confirmed target that actually needs changing
                 if current_product in corrections_dict:
                     correction_data = corrections_dict[current_product]
                     
+                    # Apply the new name
                     attributes['product'] = correction_data['new_name']
+                    features_patched += 1
                     
-                    # Add notes ensuring we document the original string and any extracted info
-                    new_notes = [f"Original product name: {current_product}"] + correction_data['notes']
-                    existing_note = attributes.get('Note', '')
-                    
-                    if existing_note:
-                        attributes['Note'] = f"{existing_note}, " + ", ".join(new_notes)
-                    else:
-                        attributes['Note'] = ", ".join(new_notes)
+                    # Apply notes
+                    new_notes = correction_data.get('notes', [])
+                    if new_notes:
+                        notes_to_append = ", ".join(new_notes)
+                        existing_note = attributes.get('Note', '')
+                        
+                        if existing_note:
+                            attributes['Note'] = f"{existing_note}, {notes_to_append}"
+                        else:
+                            attributes['Note'] = notes_to_append
 
+            # Rebuild the attribute string and write
             new_attributes_str = ';'.join([f"{k}={v}" for k, v in attributes.items()])
             cols[8] = new_attributes_str
-            
             outfile.write('\t'.join(cols) + '\n')
+            
+    return features_scanned, features_patched
 
 def write_tsv(corrections_dict, tsv_file):
     """Writes the dictionary key mapping to a TSV file for easy review."""
@@ -179,20 +181,32 @@ def write_tsv(corrections_dict, tsv_file):
             writer.writerow([orig, data['new_name'], notes_str])
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Patch GFF using targeted custom rules.')
+    parser = argparse.ArgumentParser(description='Iteratively patch GFF using targeted custom rules.')
     parser.add_argument('-r', '--report', required=True, help='The text file containing the discrepancy report')
     parser.add_argument('-i', '--input', required=True, help='The input GFF file')
     parser.add_argument('-o', '--output', required=True, help='The output GFF file')
-    parser.add_argument('-t', '--tsv', default='correction_map.tsv', help='Optional: Output TSV map file name (default: correction_map.tsv)')
+    parser.add_argument('-t', '--tsv', default='correction_map.tsv', help='Optional: Output TSV map file name')
     args = parser.parse_args()
 
     print("Parsing discrepancy report and generating keys...")
     correction_map = build_correction_dictionary(args.report)
-    print(f"Generated {len(correction_map)} unique corrections that require updates.")
+    print(f"Generated {len(correction_map)} unique rule triggers that require updates.")
     
     print(f"Writing correction map to {args.tsv}...")
     write_tsv(correction_map, args.tsv)
 
     print("Patching GFF file...")
-    patch_gff(args.input, args.output, correction_map)
-    print(f"Done! Fixed GFF written to {args.output}")
+    scanned, patched = patch_gff(args.input, args.output, correction_map)
+    
+    # ---------------------------------------------------------
+    # CONFIRMATION PRINT BLOCK
+    # ---------------------------------------------------------
+    print("\n" + "="*40)
+    print(" GFF PATCHING COMPLETE")
+    print("="*40)
+    print(f" Total 'product' features scanned: {scanned}")
+    print(f" Features successfully patched:    {patched}")
+    if patched > 0:
+        print(f" Success Rate:                     {round((patched/scanned)*100, 2)}%")
+    print(f" Output saved to:                  {args.output}")
+    print("="*40 + "\n")
