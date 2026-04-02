@@ -20,18 +20,40 @@ def generate_correction(old_name):
     if re.search(r'(?i)\bother\b', name):
         name = "putative sugar transporter protein"
 
-    # SUSPECT: > 100 characters / 'Fragment' species extraction
-    # Extracts binomial species names in parentheses (e.g., "(Drosophila melanogaster)")
-    # and moves them to the notes as "evidence from <species>"
-    species_matches = re.findall(r'\(([A-Z][a-z]+\s+[a-z]+(?:\s+.*?)?)\)', name)
-    for species in species_matches:
-        notes_to_add.append(f"evidence from {species}")
-        name = name.replace(f"({species})", "")
+    # NEW RULE: Any parentheses () - Move to notes and remove from name
+    # This also naturally handles the (<species>) extraction
+    paren_matches = re.findall(r'\(([^)]+)\)', name)
+    for match in paren_matches:
+        if match.lower() == 'fragment':
+            continue # Skip here, handled specifically by the Fragment rule below
+            
+        # Check if it looks like a binomial species name (Capitalized word + lowercase word)
+        if re.match(r'^[A-Z][a-z]+\s+[a-z]+(?:\s+.*)?$', match):
+            notes_to_add.append(f"evidence from {match}")
+        else:
+            notes_to_add.append(f"Original note: {match}")
+            
+        # Remove the matched parenthesis block from the name
+        name = name.replace(f"({match})", "")
 
-    # SUSPECT: 320 features contain 'Fragment'
+    # NEW RULE: Recheck to make absolutely sure there is no 'Fragment'
     if re.search(r'(?i)\bfragment\b', name):
-        # Removes the word fragment and any surrounding parentheses if present
-        name = re.sub(r'(?i)\(?\bfragment\b\)?', '', name)
+        name = re.sub(r'(?i)\bfragment\b', '', name)
+
+    # NEW RULE: Unopened/Unbalanced Brackets or Parentheses
+    # Clean up empty brackets first just in case
+    name = name.replace('()', '').replace('[]', '')
+    
+    # If any brackets/parentheses are STILL in the string, they are unbalanced
+    if any(char in name for char in '()[]'):
+        if ' ' in name:
+            # If there are spaces, remove the specific words/tokens containing the broken brackets
+            words = name.split()
+            clean_words = [w for w in words if not any(c in w for c in '()[]')]
+            name = " ".join(clean_words)
+        else:
+            # If there are no spaces (it's a single broken word), make it hypothetical
+            name = "hypothetical protein"
 
     # SUSPECT: Implies evolutionary relationship
     name = re.sub(r'(?i)\bhomolog(ue)?\b', '-like protein', name)
@@ -52,15 +74,17 @@ def generate_correction(old_name):
         name = re.sub(r'(?i)low quality protein', 'hypothetical protein', name)
         notes_to_add.append("Originally labeled as Low Quality Protein")
 
-    # FATAL: Formatting errors (empty brackets, periods followed by space, trailing periods)
-    name = name.replace('()', '').replace('[]', '') 
+    # FATAL: Formatting errors (periods followed by space)
     name = name.replace('. ', ' ') 
-    name = name.rstrip('.') 
     
     # Cleanup extra whitespace left behind by regex replacements
     name = re.sub(r'\s+', ' ', name).strip()
 
-    # FATAL: Product name does not contain letters
+    # NEW RULE: Double check to make sure no changes end with a period
+    # rstrip('. ') removes any trailing periods or spaces at the very end of the string
+    name = name.rstrip('. ')
+
+    # NEW RULE: If it does not contain letters, make it hypothetical protein
     if not name or not any(c.isalpha() for c in name):
         name = "hypothetical protein"
 
@@ -81,10 +105,14 @@ def build_correction_dictionary(report_file):
                 
                 if original_product and original_product not in corrections:
                     fixed_name, notes = generate_correction(original_product)
-                    corrections[original_product] = {
-                        'new_name': fixed_name,
-                        'notes': notes
-                    }
+                    
+                    # NEW RULE: If it's not different, don't change it.
+                    # Only add to the dictionary if the name was actually modified.
+                    if fixed_name != original_product:
+                        corrections[original_product] = {
+                            'new_name': fixed_name,
+                            'notes': notes
+                        }
                     
     return corrections
 
@@ -111,20 +139,20 @@ def patch_gff(gff_in, gff_out, corrections_dict):
             if 'product' in attributes:
                 current_product = attributes['product']
                 
+                # If it's in the dict, it means it's a confirmed target that actually needs changing
                 if current_product in corrections_dict:
                     correction_data = corrections_dict[current_product]
                     
                     attributes['product'] = correction_data['new_name']
                     
-                    # Only add notes if the script generated new ones (e.g. species evidence)
-                    if correction_data['notes']:
-                        new_notes = [f"Original product name: {current_product}"] + correction_data['notes']
-                        existing_note = attributes.get('Note', '')
-                        
-                        if existing_note:
-                            attributes['Note'] = f"{existing_note}, " + ", ".join(new_notes)
-                        else:
-                            attributes['Note'] = ", ".join(new_notes)
+                    # Add notes ensuring we document the original string and any extracted info
+                    new_notes = [f"Original product name: {current_product}"] + correction_data['notes']
+                    existing_note = attributes.get('Note', '')
+                    
+                    if existing_note:
+                        attributes['Note'] = f"{existing_note}, " + ", ".join(new_notes)
+                    else:
+                        attributes['Note'] = ", ".join(new_notes)
 
             new_attributes_str = ';'.join([f"{k}={v}" for k, v in attributes.items()])
             cols[8] = new_attributes_str
@@ -150,7 +178,7 @@ if __name__ == '__main__':
 
     print("Parsing discrepancy report and generating keys...")
     correction_map = build_correction_dictionary(args.report)
-    print(f"Generated {len(correction_map)} unique corrections.")
+    print(f"Generated {len(correction_map)} unique corrections that require updates.")
     
     print(f"Writing correction map to {args.tsv}...")
     write_tsv(correction_map, args.tsv)
