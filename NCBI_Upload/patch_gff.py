@@ -35,11 +35,13 @@ def generate_correction(old_name):
         # =========================================================
         # TIER 2: PARENTHETICAL & SPECIES EXTRACTIONS
         # =========================================================
-        # I want to edit this to only include matching () and treat [] separately leaving them in place for now since they often contain important domain info.
         paren_matches = re.findall(r'\(([^)]+)\)', name)
         for match in paren_matches:
             if match.lower() == 'fragment':
                 pass 
+            # Protect short gene symbols/numbers like the '2' in l(2)tid
+            elif len(match) <= 2 and match.isalnum():
+                continue 
             elif re.match(r'^[A-Z][a-z]+\s+[a-z]+(?:\s+.*)?$', match):
                 notes_to_add.add(f"evidence from {match}")
             else:
@@ -72,7 +74,6 @@ def generate_correction(old_name):
         # TIER 4: FINAL FORMATTING & FALLBACKS
         # =========================================================
         # 4.1 All caps handling (e.g., "ABCD" -> "Putative ABCD domain-containing protein")
-        # Added check for "Putative" to avoid infinite looping/double-prefixing
         if name.isupper() and any(c.isalpha() for c in name) and not name.startswith("Putative"):
             name = f"Putative {name} domain-containing protein"
 
@@ -91,8 +92,6 @@ def generate_correction(old_name):
 def build_correction_dictionary(report_file):
     """Parses the discrepancy report and returns a dict of {Original: {'new_name': str, 'notes': list}}."""
     corrections = {}
-    
-    # Matches 1+ uppercase letters/numbers, an underscore, and 1+ digits (e.g., ACWDOJ_015419)
     locus_tag_pattern = re.compile(r'^[A-Z0-9]+_\d+$')
     
     with open(report_file, 'r') as report:
@@ -104,7 +103,6 @@ def build_correction_dictionary(report_file):
             if len(parts) >= 3:
                 original_product = parts[1].strip()
                 
-                # Exclude lines that are just Locus Tags catching a free ride
                 if locus_tag_pattern.match(original_product):
                     continue
                 
@@ -120,7 +118,7 @@ def build_correction_dictionary(report_file):
     return corrections
 
 def patch_gff(gff_in, gff_out, corrections_dict):
-    """Reads the GFF, applies replacements, and returns confirmation counts."""
+    """Reads the GFF, applies substring replacements, and returns confirmation counts."""
     features_scanned = 0
     features_patched = 0
 
@@ -146,11 +144,18 @@ def patch_gff(gff_in, gff_out, corrections_dict):
                 features_scanned += 1
                 current_product = attributes['product']
                 
-                if current_product in corrections_dict:
-                    correction_data = corrections_dict[current_product]
+                # Check for substring match rather than exact match
+                matched_key = None
+                for bad_name in corrections_dict:
+                    if bad_name in current_product:
+                        matched_key = bad_name
+                        break
+                
+                if matched_key:
+                    correction_data = corrections_dict[matched_key]
                     
-                    # Apply the new name
-                    attributes['product'] = correction_data['new_name']
+                    # Apply the fix strictly to the matched substring
+                    attributes['product'] = current_product.replace(matched_key, correction_data['new_name'])
                     features_patched += 1
                     
                     # Apply notes
@@ -181,7 +186,7 @@ def write_tsv(corrections_dict, tsv_file):
             writer.writerow([orig, data['new_name'], notes_str])
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Iteratively patch GFF using targeted custom rules.')
+    parser = argparse.ArgumentParser(description='Iteratively patch GFF using targeted substring matches.')
     parser.add_argument('-r', '--report', required=True, help='The text file containing the discrepancy report')
     parser.add_argument('-i', '--input', required=True, help='The input GFF file')
     parser.add_argument('-o', '--output', required=True, help='The output GFF file')
@@ -198,9 +203,6 @@ if __name__ == '__main__':
     print("Patching GFF file...")
     scanned, patched = patch_gff(args.input, args.output, correction_map)
     
-    # ---------------------------------------------------------
-    # CONFIRMATION PRINT BLOCK
-    # ---------------------------------------------------------
     print("\n" + "="*40)
     print(" GFF PATCHING COMPLETE")
     print("="*40)
