@@ -9,9 +9,9 @@ library(stringr)
 # Global Parameters
 wkdir = "~/Downloads/MOORE_LAB_UNL/GRYLLUS_GENOME_ASSEMBLY/GIT_REPO/gryllus_genome_assembly/Paper/Validate_X"
 result_dir = "results"
-file_name = "Gpenn_XchrValidation"
-coverage_file = "GPENN_ETH.regions.bed"
-key_file = "../Repeat_Features/Gpenn.asm.key.tsv"
+file_name = "Gfirm_XchrValidation"
+coverage_file = "GFIRM_LZ.regions.bed"
+key_file = "../Repeat_Features/Gfirm.asm.key.tsv"
 
 setwd(wkdir)
 
@@ -86,3 +86,4 @@ ggsave(filename = paste0(file_path,".png"), plot = plot, device = "png",  height
 
 # Save the plot in PDF format
 ggsave(filename = paste0(file_path,".pdf"), plot = plot, device = "pdf", height = 8.27 , width = 11.69)
+

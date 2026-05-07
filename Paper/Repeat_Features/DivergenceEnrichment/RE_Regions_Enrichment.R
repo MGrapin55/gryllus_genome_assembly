@@ -27,7 +27,7 @@ library(ggplot2)
 # SETTING PARAMETERS: 
 setwd("~/Downloads/MOORE_LAB_UNL/GRYLLUS_GENOME_ASSEMBLY/GIT_REPO/gryllus_genome_assembly/Paper/Repeat_Features/DivergenceEnrichment")
 
-out_dir <- "SpeciationRegions_Results/NarrowTrial"
+out_dir <- "SpeciationRegions_Results/Correct"
 
 # Scales (window size)
 #window = 1e4 # 10 kb
@@ -35,7 +35,9 @@ out_dir <- "SpeciationRegions_Results/NarrowTrial"
 #window = 1e6 # 1 mb 
 #window_sizes <- c(1e4, 1e5, 1e6, 1e7, 1e8)
 #window_sizes <- c(1e6, 5e6, 1e7, 2e7, 3e7, 4e7, 5e7, 7e7, 7e7, 8e7, 9e7, 1e7)
-window_sizes <- c(5e6, 1e7, 1.5e7, 2e7)
+#window_sizes <- c(5e6, 1e7, 1.5e7, 2e7)
+window_sizes <- c(5e6)
+
 # Experiment with window size 5mb = 5e6, 50mb = 50e6
 
 species <- c("Gpenn", "Gfirm")
@@ -49,6 +51,15 @@ Allele_Files <- c(
   Gfirm = "../firmus.DMs.txt"
 )
 
+CHR_Files <- c(
+  Gpenn = "../Gpenn.chr.lengths.tsv",
+  Gfirm = "../Gfirm.chr.lengths.tsv"
+)
+
+KEY_Files <- c(
+  Gpenn = "../Gpenn.asm.key.tsv",
+  Gfirm = "../Gfirm.asm.key.tsv"
+)
 cutoff_quantile = 0.90
   
 # Load some handy functions in
@@ -65,7 +76,7 @@ for (sp in species) {
   
   pdf_file <- file.path(
     out_dir,
-    paste0(sp, "_","wideTrial", "_", cutoff_quantile,"Quantile", "_SpeciationTracks.pdf")
+    paste0(sp, "_", cutoff_quantile,"Quantile", "_SpeciationTracks.pdf")
   )
   
   pdf(pdf_file, width = 11.69, height = 8.27)
@@ -80,6 +91,8 @@ for (sp in species) {
       window = w,
       allele_file = Allele_Files[[sp]],
       rm_file = RM_Files[[sp]],
+      chr_length = CHR_Files[[sp]],
+      key = KEY_Files[[sp]],
       cutoff = cutoff_quantile
     )
     
@@ -95,6 +108,8 @@ for (sp in species) {
   dev.off()
 }
 
+
+
 ## STATISTICAL TESTING 
 # Manuelly done for one
 analysis <- Speciation_Analysis(
@@ -102,71 +117,48 @@ analysis <- Speciation_Analysis(
   window = 5e6,
   allele_file = "../pennsylvanicus.DMs.txt",
   rm_file = "../Gpenn.clean.out",
+  key = "../Gpenn.asm.key.tsv", 
+  chr_length = "../Gpenn.chr.lengths.tsv",
   cutoff = 0.90
 )
+
+p <- plot_speciation_tracks(
+  analysis,
+  speciation_colors = c("grey80", "red"),
+  line_width = 0.8
+)
+
+print(p)
 
 AD <- analysis$allele_density
 FD <- analysis$feature_density
 
-# I do not think the hypergeometric distribution is going to work
-
-# N = n windows 
-# K = n repeats 
-# n = n windows of interest 
-# k = n repeats in windows of interest.
+full_df <- left_join(AD, FD, by = c("species", "group",   "bin",     "pos"))
 
 
 
+AD %>% group_by(group) %>% distinct(cutoff)
+# # A tibble: 15 × 2
+# # Groups:   group [15]
+# group   cutoff
+# <fct>    <dbl>
+#   1 X_chr  226.   
+# 2 chr_1    0    
+# 3 chr_2   36.4  
+# 4 chr_3    0    
+# 5 chr_4    0    
+# 6 chr_5    0    
+# 7 chr_6    0    
+# 8 chr_7    0    
+# 9 chr_8    0.800
+# 10 chr_9    1.2  
+# 11 chr_10   2.6  
+# 12 chr_11 249.   
+# 13 chr_12   1.8  
+# 14 chr_13 262.   
+# 15 chr_14   0    
+# Zeros mean it is really not concentrated so it is probably worth while to just excluded them
 
-
-N = FD %>% filter(group == "X_chr") %>% nrow()
-
-K = analysis$rm_df %>% filter(group == "X_chr") %>% nrow()
-
-n = AD %>% filter(Region_Speciation == 1, group == "X_chr") %>% nrow() 
-
-keep <- AD %>% filter(Region_Speciation == 1, group == "X_chr") %>% pull(bin)
-
-window = 5e6
-rm <- rm %>% mutate(bin = floor(midpoint / window) * window)
-
-k = analysis$rm_df %>% filter(group == "X_chr", bin %in% keep) %>% nrow()
-
-#K = FD %>%
- # filter(group == "X_chr") %>%
- # summarise(total = sum(density, na.rm = TRUE)) %>%
- # pull(total)
-
-
-keep <- AD %>% filter(Region_Speciation == 1, group == "X_chr") %>% pull(bin)
-#k = FD %>% filter(group == "X_chr", pos %in% keep) %>% summarise(total = sum(density)) %>% pull()
-
-
-k = analysis$rm_df %>% filter(group == "X_chr", bin %in% keep) %>% nrow()
-
-
-p_value <- phyper(k - 1, K, N - K, n, lower.tail = FALSE)
-
-
-
-window <- 5e6
-
-
-repeat_per_window <- rm %>%
-  filter(group == "X_chr") %>%
-  count(bin, name = "repeat_count")
-
-df <- AD %>%
-  filter(group == "X_chr") %>%
-  left_join(repeat_per_window, by = "bin") %>%
-  mutate(repeat_count = replace_na(repeat_count, 0))
-
-
-FD <- FD %>% filter(group == "X_chr") %>% mutate(repeat_count = density)
-df <- AD %>%
-  filter(group == "X_chr") %>%
-  left_join(FD, by = "bin") %>%
-  mutate(repeat_count = replace_na(repeat_count, 0))
 
 library(MASS)
 

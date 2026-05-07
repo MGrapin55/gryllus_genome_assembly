@@ -104,7 +104,7 @@ def main(fasta_files):
         total_len, chrom_lens, unplaced_len = summarize_fasta(fasta)
         species = SPECIES_NAMES.get(os.path.basename(fasta), os.path.basename(fasta))
 
-        # Chromosomes (X + 1–14)
+        # Chromosomes (X + 1–14)        # Now just doing X + 2-15 (Did not change code but just used the default labels shifted down (4.28.2026))
         for i, bp in enumerate(chrom_lens):
             region = "X" if i == 0 else str(i)
             rows.append({

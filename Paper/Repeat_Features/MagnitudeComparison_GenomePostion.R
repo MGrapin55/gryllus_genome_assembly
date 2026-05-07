@@ -118,7 +118,6 @@ df_diff <- df_diff %>%
   )
 
 
-
 ggplot(df_diff, aes(x = genome_pos, y = density_diff, color = class)) +
   geom_point() +
   geom_hline(yintercept = 0, color = "red", linewidth = 0.6) +
@@ -131,9 +130,8 @@ ggplot(df_diff, aes(x = genome_pos, y = density_diff, color = class)) +
         axis.ticks.x = element_blank()) +
   labs(x = "Genome (windows 1 Mb)", y = "Density difference", 
        title = "Net Density Variation", 
-       subtitle = ("Net = Gfirm.elementDensity - Gpenn.elementDensity"))
+       subtitle = ("Net = Gfirm.elementDensity - Gpenn.elementDensity")) + facet_wrap(~ class)
 
-+ facet_wrap(~class)
 ## this is useful and we can break this down even more among class_family to see how the density changes
 ## This will look nice to then break out to smaller subgroups that we can test for with enrichment tests or 
 ## chi-squared. 
