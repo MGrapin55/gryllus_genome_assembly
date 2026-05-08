@@ -29,4 +29,10 @@ Follows methods described in paper.
 
 
 ### Functional Annotation 
-```eggnog-mapper``` and ```interpro-scan``` were both ran on a gui webserver for easy of use.   
+```eggnog-mapper``` and ```interpro-scan``` were both ran on a gui webserver for easy of use.  All remaining hypothetical proteins were then blasted against Swiss-Prot (Insecta), TrEMBL (Insecta), and Swiss-Prot (All Taxa) to assign putative annotations. Scripts used in this process were: 
+* ```blastp.sh``` and ```blastp_grid.sh```  
+* ```ParseHypothetical.py```  
+* ```SearchBlastResults.sh```  
+* ```UpdateGff.py```  
+
+These annotations were then merged together with ```funannotate.sh```.  
