@@ -52,3 +52,16 @@ Paper/Repeat_Features/MultiSpecies/Gasim_Gbimac_Alignment/Gassim_Gbimac_Alignmen
 /Gfirm/06_NCBI_UPLOAD
 /Gfirm
 /Gpenn
+
+# Ignore all intermediate 
+Annotation/**
+Assembly/**
+ChrNamingConventions/**
+CrossReference/**
+Gpenn/**
+Gfirm/**
+Gryllus_Genomes_3_31_2026/**
+Mitogenome_Validation/**
+NCBI_Uplpad/**
+Paper/**
+README.md
